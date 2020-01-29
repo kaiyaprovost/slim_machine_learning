@@ -1,580 +1,81 @@
 initialize() {
-	// NOTE: took out all of the "deregister" stuff 
-	// because was messing up
-	// except the one after "fixed"
+	
+	// TODO: incorporate non-random mating
+	
 	cat("\nStart initialize\n");
-   // TODO: incorporate non-random mating
-	defineConstant("g_rate",1); // -g
-	defineConstant("mu", 1e-7); // -m
+//	defineConstant("mu", 1e-7); // -m
+//	defineConstant("recomb",1e-8); // -r
+//	defineConstant("N",200); // -N
+//	defineConstant("subpopCount",2); // -B
+//	
+//	defineConstant("N_dif",500); // -f 
+//	defineConstant("g_rate",1.03); // -g
+//	defineConstant("growthGen",10); // -G
+//	
+//	defineConstant("selStrength",0.5); // -w
+//	defineConstant("sweepType","h"); // -h
+//	defineConstant("sweepGen",20); // -H
+//	
+//	defineConstant("outSamp",20); // -s
+//	defineConstant("tempName",'model.temp'); // from -o
+//	defineConstant("textName",'model.txt'); // from -o
+//	defineConstant("treeName",'model.trees'); // from -o 
+//	defineConstant("outputGen",100); // -O
+//	
+//	defineConstant("spatial",1); // -l
+//	defineConstant("ibd",1); // -i
+//	defineConstant("nicheFile","/Users/kprovost/Documents/Dissertation/CHAPTER1_REVIEW/SLIM/vireotest_slim_TRANSITION_57x87_coarse.txt"); // -e, if this doesn't work try changing to linux not macos format
+//	defineConstant("nicheX",57); // -x
+//	defineConstant("nicheY",87); // -y
+//	defineConstant("competition",0); // -c
+//	
+//	defineConstant("treeSeq",1); // -t 
+//	
+//	defineConstant("allPops",0); // -a currently not implemented for growth 
+//	defineConstant("migRate",0.5); // -M must be 0 to <1, also might not work spatially neccesarily -- will need to check
+//	defineConstant("secContact",0); // -v
+//	defineConstant("secConGen",1000); // -V
 	
-	defineConstant("N_dif",200); // -f 
-	defineConstant("N",200); // -N
 	
-	defineConstant("outSamp",20); // -s
-	defineConstant("recomb",1e-8); // -r
 	
-	defineConstant("selStrength",0.5); // -w
-	defineConstant("sweepType","n"); // -h
-	
-	defineConstant("tempName",'model.temp'); // from -O
-	defineConstant("textName",'model.txt'); // from -O
-	defineConstant("treeName",'model.trees'); // from -O 
-	
-	defineConstant("nicheFile","/Users/kprovost/Documents/Classes/Machine_Learning/SLiMTreeSeqPub-master/vireotest_slim_27x45.asc"); // -e
-	defineConstant("nicheX",27); // -x
-	defineConstant("nicheY",45); // -y
-	defineConstant("competition",1); // -c
-	defineConstant("ibd",1); // -i
-	defineConstant("spatial",1); // -l
-	
-	defineConstant("treeSeq",1); // -t 
-	
-	defineConstant("subpopCount",2); // -P
-	
-	// SUGGESTED FIX: initialize single population, then split in half based on latitude after some number of generations
-	// need to invoke competition between species vs competition between conspecifics
-	// if the mates around you aren't your population you don't mate? 
-	
-	defineConstant("allPops",0); // currently not implemented for growth 
 	if(spatial==1){
 		initializeSLiMOptions(dimensionality="xy");
 	}
+	
 	if(treeSeq==1){
 		initializeTreeSeq();
-	}
-	if(treeSeq==1){
 		initializeMutationRate(0.0);
 	}
 	else {
 		initializeMutationRate(mu);
 	}
-	initializeMutationType("m1", 0.5, "f", 0.0);
-	// mutation for a hard sweep 
-	initializeMutationType("m2", 1.0, "f", 0.0);  // introduced mutation
-	// introduced mutation is set to 0.0 here to be changed later 
+	
+	initializeMutationType("m1", 0.5, "f", 0.0); // mutation for a hard sweep?
+	initializeMutationType("m2", 1.0, "f", 0.0); // introduced mutation, set to 0.0 here to be changed later 
+	
 	initializeGenomicElementType("g1", m1, 1.0);
 	initializeGenomicElement(g1, 0, 99999);
+	
 	initializeRecombinationRate(recomb);
+	
 	if (spatial==1) {
 		if(competition==1) {
 			// spatial competition interactions, optional
 			initializeInteractionType(1, "xy", reciprocal=T, maxDistance=0.3); // competition
 			i1.setInteractionFunction("n", 3.0, 0.1);
+		
 		}
 		if(ibd==1) {
 			// spatial mate choice to invoke ibd
-			initializeInteractionType(2, "xy", reciprocal=T, maxDistance=0.1);
+			initializeInteractionType(2, "xy", reciprocal=T, maxDistance=0.3);
 		}
 	}
 	
 	defineConstant("spatialcolors",c("black","blue","cyan"));
 	
+	
 	cat("\nEnd initialize\n");
-	// 
-}
-// NOTE: changing the interactions to sigma_C etc makes it 10x faster
-1 late() {
-	
-	// deregister the s1 script block so it doesn't execute unless called 
-	//sim.deregisterScriptBlock(s1);
-	
-	//may need to change to 1 late()
-	// save this run's identifier, used to save and restore
-	defineConstant("simID", getSeed());
-	cat("\nAdd subpops\n");
-	for (i in 1:subpopCount) {
-		sim.addSubpop(i, N);
-		if (spatial==1) {
-			cat("\nset spatial\n");
-			sim.subpopulations[i-1].setSpatialBounds(c(0.0, 0.0, 1.0, 1.0)); // can set to nicheY and nicheX but then need to modify makeChild
-			mapLines = rev(readFile(nicheFile));
-			mapLines = sapply(mapLines, "strsplit(applyValue, ' ');");
-			mapValues = asFloat(mapLines);
-			//print(mapValues);
-			
-			
-			
-			sim.subpopulations[i-1].defineSpatialMap("map1", "xy", c(nicheY, nicheX), mapValues, interpolate=F,
-				valueRange=c(-1.0, 1.0), colors=spatialcolors);
-			// initial positions are random in ([0,1], [0,1])
-			//p1.individuals.x = runif(p1.individualCount);
-			//p1.individuals.y = runif(p1.individualCount);
-			// Initial positions are random within spatialBounds
-			for (ind in sim.subpopulations[i-1].individuals) {
-				ind.setSpatialPosition(p1.pointUniform());
-				// ideally want to initialize with weight according to layer beneath 
-			}
-		}
-	}
-}
-// optional blocks of code for competition and mate choice
-1: late() {
-	// print the generation 
-	if((sim.generation % 100) == 0)
-	{
-		cat(sim.generation+" ");
-	}
-	//print("evaluate comp/choice");
-	if (spatial==1){
-		if (competition==1){
-			i1.evaluate();
-		}
-		if (ibd==1){
-			i2.evaluate();
-		}
-	}
-	//print("eval");
-}
-fitness(NULL) {
-	if(spatial==1){
-		if(competition==1){
-			//print("evaluate fitness 1");
-			totalStrength = i1.totalOfNeighborStrengths(individual);
-			return 1.1 - totalStrength / subpop.individualCount;
-			// this only calculates competition for the subpop where the individual resides
-			// will need to implement competition between populations 
-		}
-	}
-	return relFitness;
-}
-fitness(NULL) {
-	if(spatial==1){
-		//print("evaluate fitness 2");
-		// reward based on the cell you're in 
-		location = individual.spatialPosition[0:1];
-		value = subpop.spatialMapValue("map1",location);
-		// return the value of those cells  
-		return (sqrt(sqrt(value))*relFitness);
-	}
-	return(relFitness);
-}
-1: mateChoice() {
-	for (i in 1:subpopCount) {
-		//print(i);
-		//print(sim.subpopulations[i-1]);
-		if(spatial==1){
-			if(ibd==1){
-				//print("mate choice 1");
-				// nearest-neighbor mate choice
-				neighbors = i2.nearestNeighbors(individual, 3);
-				mates = rep(0.0, sourceSubpop.individualCount);
-				mates[neighbors.index] = 1.0;
-			}
-			else {
-				//print("mate choice 2");
-				mates = rep(1.0, sourceSubpop.individualCount);
-			}
-		}
-		else {
-			//print("mate choice 2");
-			mates = rep(1.0, sourceSubpop.individualCount);
-		}
-		return mates;
-	}
-	//return mates;
-}
-modifyChild() {
-	for (i in 1:subpopCount) {
-		if (spatial==1){
-			//print("modify child spatial");
-			// draw a child position near the first parent, within bounds
-			// could do more efficiently in one swoop, with claimping?
-			// Reprising boundary conditions
-			// ideal: draw a child near the first parent within bounds
-			// prevent from occupying in cells with value of -1 
-			// probability of breeding has to do with where the cell the parent is in 
-			do pos = parent1.spatialPosition + rnorm(2, 0, 0.02);
-			while (!sim.subpopulations[i-1].pointInBounds(pos));
-			// prevent dispersal into water
-			if (sim.subpopulations[i-1].spatialMapValue("map1", pos) == -1.0)
-				return F;
-			child.setSpatialPosition(pos);
-			return T;
-		}
-		return T;
-	}
-}
-1000 late() { // changed from late 
-	
-	
-	
-	// save the state of the simulation
-	cat("\n"+"save sim\n"); // does this correctly 
-	if(treeSeq==0){
-		sim.outputFull("/tmp/slim_" + simID + ".txt");
-	}
-	else {
-		sim.treeSeqOutput("/tmp/slim_" + simID + ".trees");
-	}
-	
-	cat("\n"+"add mutation\n");
-	
-	// first if the sweep type is h (hard) add one per population
-	if (sweepType == "h") {
-		
-		if (allPops == 0) {
-			target = sample(p1.genomes, 1);
-			target.addNewDrawnMutation(m2, 10000);
-			mut = sim.mutationsOfType(m2);
-		}
-		
-		if (allPops == 1){
-			for (i in 1:subpopCount){
-				
-				if (i == 1){
-					target = sample(p1.genomes, 1);
-					target.addNewDrawnMutation(m2, 10000);
-					mut = sim.mutationsOfType(m2);
-				
-				}
-				else {
-					target = sample(sim.subpopulations[i-1].genomes,1);
-					target.addMutations(mut);
-				}
-			}
-		}
-		// if the sweep type is "h" change the selection coefficient
-		
-		mut = sim.mutationsOfType(m2);
-		mut.setSelectionCoeff(selStrength);
-	}
-	
-	// if the sweep type is "s" (soft) add to 5% of individuals, rounded
-	if (sweepType=="s") {
-		numberToAdd= asInteger(round(N*0.09));
-		cat("\nAdding: "+numberToAdd+"\n");
-		
-		if (allPops == 0) {
-			target = sample(p1.genomes, numberToAdd);
-			target.addNewDrawnMutation(m2, 10000);
-			mut = sim.mutationsOfType(m2);
-		}
-		
-		if (allPops == 1){
-			for (i in 1:subpopCount){
-				
-				if (i == 1){
-					target = sample(p1.genomes, numberToAdd);
-					target.addNewDrawnMutation(m2, 10000);
-					mut = sim.mutationsOfType(m2);
-				
-				}
-				else {
-					target = sample(sim.subpopulations[i-1].genomes,1);
-					target.addMutations(mut);
-				}
-			}
-		}
-	
-	}
-	
-	
-	// introduce the sweep mutation
-	// note: this currently is only done for pop1
-}
-s2 1000: late() {
-	//print("start sweeps");
-	// NOTE: this does not currently check if its fixed within a population 
-	// or missing within a population 
-	
-	// NOTE2: you really need to rewrite this so it doesnt call the same code over and over
-	// use one of those s1 blocks? 
-	
-	// ALSO: not working right now when one population keeps and one loses 
-	
-	
-	if (sweepType == "s")
-	{
-		//cat("\nSOFT SWEEP\n");
-		// this is for soft sweeps 
-		mut = sim.mutationsOfType(m2);
-		if (size(mut) == 1)
-		{
-			//cat("\nMUTATIONS PRESENT\n");
-			//if (sim.mutationFrequencies(NULL, mut) > 0.1)
-			if (allPops == 0){
-				//cat("\nNOT ALLPOPS\n");
-				if (sim.mutationFrequencies(p1, mut) > 0.1) // assumes only happening in p1
-				{
-					cat("\n"+simID + ": ESTABLISHED - CONVERTING TO BENEFICIAL\n");
-					mut.setSelectionCoeff(selStrength);
-					//sim.deregisterScriptBlock(self);
-				}
-			}
-			else if (allPops == 1) {
-				for (i in 1:subpopCount){
-					est = T;
-					if (sim.mutationFrequencies(sim.subpopulations[i-1], mut) <= 0.1)
-					{
-						est = F;
-						if (sim.mutationFrequencies(sim.subpopulations[i-1],mut) <= 0.0) {
-							
-							// [[ RESET CODE GOES HERE ]] 
-							// [[ RESET CODE GOES HERE ]] 
-							// [[ RESET CODE GOES HERE ]] 
-							// [[ RESET CODE GOES HERE ]] 
-							// [[ RESET CODE GOES HERE ]] 
-							// [[ RESET CODE GOES HERE ]] 
-							// [[ RESET CODE GOES HERE ]] 
-							// [[ RESET CODE GOES HERE ]] 
-							// [[ RESET CODE GOES HERE ]] 
-							// [[ RESET CODE GOES HERE ]] 
-							
-							//sim.registerLateEvent(NULL,s1.source);
-							
-							cat("\nrestart1\n");
-							restartSimulation();
-						
-						}
-					}
-					if (est == T) {
-						cat("\n"+simID + ": ESTABLISHED IN ALL POPS - CONVERTING TO BENEFICIAL\n");
-						mut.setSelectionCoeff(selStrength);
-						//sim.deregisterScriptBlock(self);
-					}
-				}
-			}
-		}
-		else
-		{
-			//cat("\nNO MUTS?\n");
-			// NEED TO CHECK IF FIXED OR NOT 
-			
-			fixed = (sum(sim.substitutions.mutationType == m2) == 1);
-			if (fixed)
-			{
-				cat("\n"+simID + ": FIXED\n");
-				//sim.simulationFinished();
-				sim.deregisterScriptBlock(s2);
-			}
-			else {
-				
-				
-				// [[ RESET CODE GOES HERE ]] 
-				// [[ RESET CODE GOES HERE ]] 
-				// [[ RESET CODE GOES HERE ]] 
-				// [[ RESET CODE GOES HERE ]] 
-				// [[ RESET CODE GOES HERE ]] 
-				// [[ RESET CODE GOES HERE ]] 
-				// [[ RESET CODE GOES HERE ]] 
-				// [[ RESET CODE GOES HERE ]] 
-				// [[ RESET CODE GOES HERE ]] 
-				// [[ RESET CODE GOES HERE ]] 	
-				
-				cat("\nrestart2\n");
-				restartSimulation();
-			}
-		}
-	}
-	if ((sweepType == "h") | (sweepType == "s")) // or statement
-	{
-		//cat("\nSOFT OR HARD SWEEP\n");
-		if (subpopCount > 1){
-			//cat("\nSUBPOP COUNT OVER 1\n");
-			mut = sim.mutationsOfType(m2);
-			
-			if (allPops==0) {
-				//cat("\nALLPOPS 0\n");
-				if (size(mut) == 1) {
-					freqmut = (sim.mutationFrequencies(p1, mut));
-					//print(freqmut);
-					if (freqmut >= 1) {
-						cat("\n"+simID + ": FIXED\n");
-						sim.deregisterScriptBlock(s2);
-					}
-					
-					else if (freqmut <= 0.0) {
-						
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						cat("\nrestart3\n");
-						restartSimulation();
-					
-					
-					}
-				
-				}
-				else {
-					
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					cat("\nrestart3.1\n");
-					restartSimulation();
-				
-				}
-			}
-			
-			else if (allPops == 1) {
-				//cat("\nALLPOPS 1\n");
-				if (size(mut) == 1) {
-					freqmut = 0;
-					allfreqmut = 0;
-					for (i in 1:subpopCount) {
-						
-						freqmut = (sim.mutationFrequencies(sim.subpopulations[i-1],mut));
-						allfreqmut = allfreqmut + freqmut;
-						
-						cat("\n subpop:"+i+" freq: "+freqmut);
-						
-						if (freqmut == 0) {
-							
-							fixed = (sum(sim.substitutions.mutationType == m2) == 1);
-							if (fixed)
-							{
-								cat("\n"+simID + ": FIXED\n");
-								//sim.simulationFinished();
-								sim.deregisterScriptBlock(s2);
-							}
-							else {
-								
-								// [[ RESET CODE GOES HERE ]] 
-								// [[ RESET CODE GOES HERE ]] 
-								// [[ RESET CODE GOES HERE ]] 
-								// [[ RESET CODE GOES HERE ]] 
-								// [[ RESET CODE GOES HERE ]] 
-								// [[ RESET CODE GOES HERE ]] 
-								// [[ RESET CODE GOES HERE ]] 
-								// [[ RESET CODE GOES HERE ]] 
-								// [[ RESET CODE GOES HERE ]] 
-								// [[ RESET CODE GOES HERE ]] 
-								
-								cat("\nrestart3.1\n");
-								restartSimulation();
-							
-							}
-						}
-					
-					}
-					
-					avg = freqmut / subpopCount;
-					cat("\n avg: "+avg);
-					if (avg >= 1) {
-						cat("\n"+simID + ": FIXED\n");
-						sim.deregisterScriptBlock(s2);
-					}
-					else if (avg <= 0) {
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						cat("\nrestart4\n");
-						restartSimulation();
-					
-					}
-				}
-				else
-				{
-					
-					fixed = (sum(sim.substitutions.mutationType == m2) == 1);
-					if (fixed)
-					{
-						cat("\n"+simID + ": FIXED\n");
-						//sim.simulationFinished();
-						sim.deregisterScriptBlock(s2);
-					}
-					else {
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						// [[ RESET CODE GOES HERE ]] 
-						cat("\nrestart5\n");
-						restartSimulation();
-					
-					
-					}
-				
-				
-				}
-			}
-			
-			// this is for hard sweeps 
-			if (sim.countOfMutationsOfType(m2) == 0)
-			{
-				fixed = (sum(sim.substitutions.mutationType == m2) == 1);
-				if (fixed)
-				{
-					cat("\n"+simID + ": FIXED\n");
-					//sim.simulationFinished();
-					//sim.deregisterScriptBlock(s2); // breaking -- could be doubled
-				}
-				else
-				{
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					cat("\nrestart6\n");
-					restartSimulation();
-				
-				}
-			}
-		}
-		else if (subpopCount <= 1){
-			if (sim.countOfMutationsOfType(m2) == 0)
-			{
-				fixed = (sum(sim.substitutions.mutationType == m2) == 1);
-				if (fixed)
-				{
-					cat("\n"+simID + ": FIXED\n");
-					//sim.simulationFinished();
-					//sim.deregisterScriptBlock(s2); // uncomment because called twice? 
-				}
-				else
-				{
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					// [[ RESET CODE GOES HERE ]] 
-					cat("\nrestart6.1\n");
-					restartSimulation();
-				
-				}
-			}
-		
-		
-		}
-	
-	}
+
 }
 
 function (void)restartSimulation(void)
@@ -620,10 +121,9 @@ function (void)restartSimulation(void)
 	
 	//sim.registerLateEvent(s1,start=1000);
 	//if(getSeed() - simID >= 25){
-	//	print("ERROR: RESTARTED TOO MANY TIMES");
-	//	stop();
+	//print("ERROR: RESTARTED TOO MANY TIMES");
+	//stop();
 	//}
-	
 	// re-introduce the sweep mutation
 	
 	if (allPops == 0) {
@@ -655,27 +155,195 @@ function (void)restartSimulation(void)
 		mut = sim.mutationsOfType(m2);
 		mut.setSelectionCoeff(selStrength);
 	}
-	
-	
 	// consider adding something about fitness
-
 
 }
 
+fitness(NULL) {
+	if(spatial==1){
+		if(competition==1){
+			if (relFitness == 0){
+				return(0.0);
+			}
+			//print("evaluate fitness 1");
+			totalStrength = i1.totalOfNeighborStrengths(individual);
+			return 1.1 - totalStrength / subpop.individualCount;
+			// this only calculates competition for the subpop where the individual resides
+			// will need to implement competition between populations 
+		}
+	}
+	return relFitness;
+}
 
+fitness(NULL) {
+	if(spatial==1){
+		//print("evaluate fitness 2");
+		// reward based on the cell you're in 
+		location = individual.spatialPosition[0:1];
+		value = subpop.spatialMapValue("map1",location);
+		//cat(subpop,"\n");
+		if(value==-1) {
+			return (0.0);
+		}
+		else {
+			// return the value of those cells  
+			return (sqrt(sqrt(value))*relFitness);
+		}
+	}
+	return(relFitness);
+}
 
+modifyChild() {
+	i = which(sim.subpopulations== subpop)+1;
+	if (spatial==1){
+		//print("modify child spatial");
+		// draw a child position near the first parent, within bounds
+		// could do more efficiently in one swoop, with claimping?
+		// Reprising boundary conditions
+		// ideal: draw a child near the first parent within bounds
+		// prevent from occupying in cells with value of -1 
+		// probability of breeding has to do with where the cell the parent is in 
+		do pos = parent1.spatialPosition + rnorm(2, 0, 0.02);
+		while (!sim.subpopulations[i-1].pointInBounds(pos)); {
+			// prevent dispersal into water
+			if (sim.subpopulations[i-1].spatialMapValue("map1", pos) == -1.0) {
+				return F;
+			}
+			// if not within the population subboundary do not accept
+			lower=((i-1)/subpopCount);
+			upper=((i)/subpopCount);
+			if ((pos[0] < lower) | (pos[0] > upper)) {
+				return F;
+			}
+			child.setSpatialPosition(pos);
+			return T;
+		}
+	}
+	return T;
+}
 
-1000: early() { 	// after a while this stops evaluating at all 
+1 early(){
+	cat("reschedule script blocks\n");
+	sim.rescheduleScriptBlock(s1, start=growthGen); // forever
+	sim.rescheduleScriptBlock(s2, start=sweepGen,end=sweepGen);
+	sim.rescheduleScriptBlock(s3, start=secConGen,end=secConGen);
+	sim.rescheduleScriptBlock(s4, start=sweepGen); // forever
+	sim.rescheduleScriptBlock(s5, start=outputGen,end=outputGen);
+}
+
+// NOTE: changing the interactions to sigma_C etc makes it 10x faster
+1 late() {
+	
+	// deregister the s1 script block so it doesn't execute unless called 
+	//sim.deregisterScriptBlock(s1);
+	
+	//may need to change to 1 late()
+	// save this run's identifier, used to save and restore
+	defineConstant("simID", getSeed());
+	cat("\nAdd subpops\n");
+	
+	for (i in 1:subpopCount) {
+		if (i == 1) { sim.addSubpop(i, N); } else { sim.addSubpopSplit(i, N, 1); }
+		if (spatial==1) {
+			lower=((i-1)/subpopCount);
+			upper=((i)/subpopCount);
+			cat("\nset spatial\n");
+			
+			// below change back
+			sim.subpopulations[i-1].setSpatialBounds(c(0.0, 0.0, 1.0, 1.0)); // can set to nicheY and nicheX but then need to modify makeChild
+			mapLines = rev(readFile(nicheFile));
+			mapLines = sapply(mapLines, "strsplit(applyValue, ' ');");
+			mapValues = asFloat(mapLines);
+			//print(mapValues);
+			
+			sim.subpopulations[i-1].defineSpatialMap("map1", "xy", c(nicheY, nicheX), mapValues, interpolate=F,
+				valueRange=c(-1.0, 1.0), colors=spatialcolors);
+			// initial positions are random in ([0,1], [0,1])
+			//p1.individuals.x = runif(p1.individualCount);
+			//p1.individuals.y = runif(p1.individualCount);
+			// Initial positions are random within spatialBounds
+			for (ind in sim.subpopulations[i-1].individuals) {
+				ind.setSpatialPosition(p1.pointUniform());
+				// ideally want to initialize with weight according to layer beneath 
+			}
+		}
+	}
+	//cat(sim.subpopulations);
+	//cat("\n");
+	if (migRate > 0) {
+		// set migration rates between -- all symmetrical all the time 
+		if (secContact == 0) {
+			// only set migration rates here if there isn't secondary contact
+			for (i in 1:subpopCount) {
+				for (j in 1:subpopCount) {
+					if (i != j) {
+						sim.subpopulations[i-1].setMigrationRates(j, migRate);
+					}
+				}
+			}
+		}
+	}
+}
+
+// optional blocks of code for competition and mate choice
+1: late() {
+	// print the generation 
+	if((sim.generation % 100) == 0) { cat(sim.generation+" "); }
+	if((sim.generation % 500) == 0) { cat("\n"); }
+	
+	//print("evaluate comp/choice");
+	if (spatial==1){
+		if (competition==1){
+			i1.evaluate();
+			//i3.evaluate();
+		}
+		if (ibd==1){
+			i2.evaluate();
+		}
+	}
+	//print("eval");
+}
+
+1: mateChoice() {
+	//for (i in 1:subpopCount) {
+	//print(i);
+	//print(sim.subpopulations[i-1]);
+	if(spatial==1){
+		if(ibd==1){
+			//print("mate choice 1");
+			// nearest-neighbor mate choice
+			neighbors = i2.nearestNeighbors(individual, 3);
+			mates = rep(0.0, sourceSubpop.individualCount);
+			mates[neighbors.index] = 1.0; // this automatically handles the other population i think?
+		}
+		else {
+			//print("mate choice 2");
+			mates = rep(1.0, sourceSubpop.individualCount);
+		}
+	}
+	else {
+		//print("mate choice 2");
+		mates = rep(1.0, sourceSubpop.individualCount);
+	}
+	return mates;
+	//}
+	//return mates;
+}
+
+s1 1000: early() { // after a while this stops evaluating at all 
 	// note: this only is set up to work on P1 for now 
+	
+	// also it doesn't work if you change the year the growth happens because the 999 is hardcoded
+	
 	//if(sim.generation < 1002){
-	//	print("Evaluate size change");
+	//print("Evaluate size change");
 	//}
 	// calculate the number of generations it will take to reach N_dif
 	//N_dif = asInteger(round(g_rate^(sim.generation - 999) * N));
-	if ( (log(N_dif/N) / log(g_rate) + 999) > sim.generation) {
+	if ( (log(N_dif/N) / log(g_rate) + (growthGen-1)  ) > sim.generation) {
 		//print("size");
 		// this below causes problems with float point errors 
-		newSize = asInteger(round(g_rate^(sim.generation - 999) * N));
+		newSize = asInteger(round(g_rate^(sim.generation - (growthGen-1) ) * N));
 		//print(newSize);
 		if (N > N_dif)
 		{
@@ -702,9 +370,293 @@ function (void)restartSimulation(void)
 		//print("unsize");
 		newSize=N_dif;
 	}
-	p1.setSubpopulationSize(newSize);
+	//cat("testing subpops\n");
+	//cat(sim.subpopulations);
+	//cat("\n");
+	sim.subpopulations[0].setSubpopulationSize(newSize);
 }
-2500 late() {
+
+s2 1000 late() { // changed from late 
+	
+	// save the state of the simulation
+	cat("\n"+"save sim\n"); // does this correctly 
+	if(treeSeq==0){
+		sim.outputFull("/tmp/slim_" + simID + ".txt");
+	}
+	else {
+		sim.treeSeqOutput("/tmp/slim_" + simID + ".trees");
+	}
+	cat("\n"+"add mutation\n");
+	
+	// first if the sweep type is h (hard) add one per population
+	if (sweepType == "h") {
+		
+		if (allPops == 0) {
+			target = sample(p1.genomes, 1);
+			target.addNewDrawnMutation(m2, 10000);
+			mut = sim.mutationsOfType(m2);
+		}
+		if (allPops == 1){
+			for (i in 1:subpopCount){
+				
+				if (i == 1){
+					target = sample(p1.genomes, 1);
+					target.addNewDrawnMutation(m2, 10000);
+					mut = sim.mutationsOfType(m2);
+				
+				}
+				else {
+					target = sample(sim.subpopulations[i-1].genomes,1);
+					target.addMutations(mut);
+				}
+			}
+		}
+		// if the sweep type is "h" change the selection coefficient
+		
+		mut = sim.mutationsOfType(m2);
+		mut.setSelectionCoeff(selStrength);
+	}
+	// if the sweep type is "s" (soft) add to 5% of individuals, rounded
+	if (sweepType=="s") {
+		numberToAdd= asInteger(round(N*0.09));
+		cat("\nAdding: "+numberToAdd+"\n");
+		
+		if (allPops == 0) {
+			target = sample(p1.genomes, numberToAdd);
+			target.addNewDrawnMutation(m2, 10000);
+			mut = sim.mutationsOfType(m2);
+		}
+		if (allPops == 1){
+			for (i in 1:subpopCount){
+				
+				if (i == 1){
+					target = sample(p1.genomes, numberToAdd);
+					target.addNewDrawnMutation(m2, 10000);
+					mut = sim.mutationsOfType(m2);
+				
+				}
+				else {
+					target = sample(sim.subpopulations[i-1].genomes,1);
+					target.addMutations(mut);
+				}
+			}
+		}
+	}
+	// introduce the sweep mutation
+	// note: this currently is only done for pop1
+}
+
+s3 1000 late() {
+	// set up secondary contact 
+	if (secContact == 1) {
+		if (migRate > 0) {
+			cat("secondary contact\n");
+			// set migration rates between -- all symmetrical all the time 
+			// only set migration rates here if there isn't secondary contact
+			for (i in 1:subpopCount) {
+				for (j in 1:subpopCount) {
+					cat(i+" "+j+"\n");
+					if (i != j) {
+						sim.subpopulations[i-1].setMigrationRates(j, migRate);
+					}
+				}
+			}
+		}
+	}
+}
+
+s4 1000: late() {
+	//print("start sweeps");
+	// NOTE: this does not currently check if its fixed within a population 
+	// or missing within a population 
+	
+	// NOTE2: you really need to rewrite this so it doesnt call the same code over and over
+	// use one of those s1 blocks? 
+	
+	// ALSO: not working right now when one population keeps and one loses 
+	
+	if (sweepType == "s")
+	{
+		//cat("\nSOFT SWEEP\n");
+		// this is for soft sweeps 
+		mut = sim.mutationsOfType(m2);
+		if (size(mut) == 1)
+		{
+			//cat("\nMUTATIONS PRESENT\n");
+			//if (sim.mutationFrequencies(NULL, mut) > 0.1)
+			if (allPops == 0){
+				//cat("\nNOT ALLPOPS\n");
+				if (sim.mutationFrequencies(p1, mut) > 0.1) // assumes only happening in p1
+				{
+					cat("\n"+simID + ": ESTABLISHED - CONVERTING TO BENEFICIAL\n");
+					mut.setSelectionCoeff(selStrength);
+					//sim.deregisterScriptBlock(self);
+				}
+			}
+			else if (allPops == 1) {
+				for (i in 1:subpopCount){
+					est = T;
+					if (sim.mutationFrequencies(sim.subpopulations[i-1], mut) <= 0.1)
+					{
+						est = F;
+						if (sim.mutationFrequencies(sim.subpopulations[i-1],mut) <= 0.0) {
+							
+							//sim.registerLateEvent(NULL,s1.source);
+							
+							cat("\nrestart1\n");
+							restartSimulation();
+						
+						}
+					}
+					if (est == T) {
+						cat("\n"+simID + ": ESTABLISHED IN ALL POPS - CONVERTING TO BENEFICIAL\n");
+						mut.setSelectionCoeff(selStrength);
+						//sim.deregisterScriptBlock(self);
+					}
+				}
+			}
+		}
+		else
+		{
+			//cat("\nNO MUTS?\n");
+			// NEED TO CHECK IF FIXED OR NOT 
+			
+			fixed = (sum(sim.substitutions.mutationType == m2) == 1);
+			if (fixed)
+			{
+				cat("\n"+simID + ": FIXED\n");
+				//sim.simulationFinished();
+				sim.deregisterScriptBlock(s4);
+			}
+			else {
+				
+				cat("\nrestart2\n");
+				restartSimulation();
+			}
+		}
+	}
+	if ((sweepType == "h") | (sweepType == "s")) // or statement
+	{
+		//cat("\nSOFT OR HARD SWEEP\n");
+		if (subpopCount > 1){
+			//cat("\nSUBPOP COUNT OVER 1\n");
+			mut = sim.mutationsOfType(m2);
+			
+			if (allPops==0) {
+				//cat("\nALLPOPS 0\n");
+				if (size(mut) == 1) {
+					freqmut = (sim.mutationFrequencies(p1, mut));
+					//print(freqmut);
+					if (freqmut >= 1) {
+						cat("\n"+simID + ": FIXED\n");
+						sim.deregisterScriptBlock(s4);
+					}
+					else if (freqmut <= 0.0) {
+						
+						cat("\nrestart3\n");
+						restartSimulation();
+					
+					}
+				}
+				else {
+					
+					cat("\nrestart3.1\n");
+					restartSimulation();
+				
+				}
+			}
+			else if (allPops == 1) {
+				//cat("\nALLPOPS 1\n");
+				
+				if (size(mut) == 1) {
+					freqmut = 0;
+					allfreqmut = 0;
+					
+					for (i in 1:subpopCount) {
+						
+						freqmut = (sim.mutationFrequencies(sim.subpopulations[i-1],mut));
+						allfreqmut = allfreqmut + freqmut;
+						
+						cat("\n subpop:"+i+" freq: "+freqmut);
+						
+						if (freqmut == 0) {
+							fixed = (sum(sim.substitutions.mutationType == m2) == 1);
+							if (fixed)
+							{
+								cat("\n"+simID + ": FIXED\n");
+								//sim.simulationFinished();
+								sim.deregisterScriptBlock(s4);
+							}
+							else {
+								cat("\nrestart3.1\n");
+								restartSimulation();
+							}
+						}
+					}
+					avg = freqmut / subpopCount;
+					cat("\n avg: "+avg);
+					if (avg >= 1) {
+						cat("\n"+simID + ": FIXED\n");
+						sim.deregisterScriptBlock(s4);
+					}
+					else if (avg <= 0) {
+						cat("\nrestart4\n");
+						restartSimulation();
+					}
+				}
+				else
+				{
+					fixed = (sum(sim.substitutions.mutationType == m2) == 1);
+					if (fixed)
+					{
+						cat("\n"+simID + ": FIXED\n");
+						//sim.simulationFinished();
+						sim.deregisterScriptBlock(s4);
+					}
+					else {
+						cat("\nrestart5\n");
+						restartSimulation();
+					}
+				}
+			}
+			// this is for hard sweeps 
+			if (sim.countOfMutationsOfType(m2) == 0)
+			{
+				fixed = (sum(sim.substitutions.mutationType == m2) == 1);
+				if (fixed)
+				{
+					cat("\n"+simID + ": FIXED\n");
+					//sim.simulationFinished();
+					//sim.deregisterScriptBlock(s4); // breaking -- could be doubled
+				}
+				else
+				{
+					cat("\nrestart6\n");
+					restartSimulation();
+				}
+			}
+		}
+		else if (subpopCount <= 1){
+			if (sim.countOfMutationsOfType(m2) == 0)
+			{
+				fixed = (sum(sim.substitutions.mutationType == m2) == 1);
+				if (fixed)
+				{
+					cat("\n"+simID + ": FIXED\n");
+					//sim.simulationFinished();
+					//sim.deregisterScriptBlock(s4); // uncomment because called twice? 
+				}
+				else
+				{
+					cat("\nrestart6.1\n");
+					restartSimulation();
+				}
+			}
+		}
+	}
+}
+
+s5 2000 late() {
 	cat("\nOutput\n\n###########################\n\n");
 	//sim.outputFull();
 	//p1.outputMSSample(outSamp*2,replace=F,filePath=textName,append=T);
@@ -715,4 +667,7 @@ function (void)restartSimulation(void)
 	else {
 		sim.treeSeqOutput(treeName);
 	}
+	
+	
+	
 }

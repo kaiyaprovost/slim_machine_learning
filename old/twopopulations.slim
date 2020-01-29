@@ -3,7 +3,7 @@ initialize() {
 	// because was messing up
 	// except the one after "fixed"
 	cat("\nStart initialize\n");
-   // TODO: incorporate non-random mating
+	// TODO: incorporate non-random mating
 	defineConstant("g_rate",1); // -g
 	defineConstant("mu", 1e-7); // -m
 	defineConstant("N_dif",1000); // -f 
@@ -15,12 +15,12 @@ initialize() {
 	defineConstant("tempName",'model.temp'); // from -O
 	defineConstant("textName",'model.txt'); // from -O
 	defineConstant("treeName",'model.trees'); // from -O 
-	defineConstant("nicheFile","/Users/kprovost/Documents/Classes/Machine_Learning/SLiMTreeSeqPub-master/vireotest_slim_27x45.asc"); // -e
+	defineConstant("nicheFile","/Users/kprovost/Documents/Github/slim_machine_learning/slim_simulation_data/vireotest_slim_27x45.asc"); // -e
 	defineConstant("nicheX",27); // -x
 	defineConstant("nicheY",45); // -y
 	defineConstant("competition",1); // -c
 	defineConstant("ibd",1); // -i
-	defineConstant("spatial",0); // -l
+	defineConstant("spatial",1); // -l
 	defineConstant("treeSeq",1); // -t 
 	defineConstant("subpopCount",1); // -P
 	defineConstant("allPops",0); // currently not implemented for growth 
