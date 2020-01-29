@@ -1,0 +1,64 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=99999:00:00
+#PBS -N nas4_v2t_
+#PBS -j oe
+#PBS -m ae
+#PBS -M kprovost@amnh.org
+#PBS -k oe
+
+cd /home/kprovost/nas4/Analysis_SLiM/
+source activate py36
+mu="1.11e-7"
+recomb="5e-7"
+
+cd "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TEMPS/"
+
+for fulltempfile in *model2_panmixiaIBD_21k-1560473870-18.fulltemp*; do
+
+#for fulltempfile in *.fulltemp; do
+
+## model1_panmixia_1000k-1564172830-9_1.11e-07-5e-07-4000.fulltemp
+## filename=`echo $f | cut -f1 -d'-'`
+suffix=`echo $fulltempfile | cut -f4 -d'_'`
+prefix=${fulltempfile%_$suffix*}
+suffix=${suffix%.fulltemp}
+
+subsettemp=${prefix}_${suffix}.withheader.subsettemp
+
+locsfile="${prefix}.locs"
+echo "LOCS: ${locsfile}"
+numlines=`cat ../LOCS/$locsfile | wc -l`
+Ne=$((numlines-3))
+outSamp=$Ne
+numtosample=20
+echo "${mu} ${recomb} ${Ne}"
+
+
+subsettemp=${fulltempfile%.fulltemp}.withheader.subsettemp
+outSamp=$Ne
+numtosample=20
+locsfile="${fulltempfile%.fulltemp}.locs"
+
+echo "LOCS: ${locsfile}"
+
+if [ -f "$subsettemp" ]
+then
+echo "$subsettemp found."
+elif [ -f "./SUBSET/$subsettemp" ]
+then
+echo "$subsettemp found."
+else
+echo "$subsettemp not found."
+echo "subsetting"
+source activate py36
+mv ../LOCS/${locsfile} ./
+python "/home/kprovost/nas4/Analysis_SLiM/select_ms_individuals.py" $fulltempfile $numtosample $locsfile
+cd "/home/kprovost/nas4/Analysis_SLiM/"
+#mv "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TEMPS/${locsfile}" "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/LOCS/${locsfile}"
+echo "
+done subsetting"
+fi
+mv $fulltempfile* "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TEMPS/FULLTEMP/"
+mv /home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/*loc* /home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/LOCS/
+done	

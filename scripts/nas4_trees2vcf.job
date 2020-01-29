@@ -1,0 +1,77 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=99999:00:00
+#PBS -N nas4_t2v
+#PBS -j oe
+#PBS -m ae
+#PBS -M kprovost@amnh.org
+#PBS -k oe
+
+##change to the working directory
+#cd $PBS_O_WORKDIR
+#echo "pbsworkdir"
+#echo $PBS_O_WORKDIR
+#EXECDIR=`pwd`
+#export PATH=./:$PATH
+#echo $PATH
+
+cd /home/kprovost/nas4/Analysis_SLiM/
+source activate py36
+mu="1.11e-7"
+recomb="5e-7"
+Ne=8000
+echo "${mu} ${recomb} ${Ne}"
+cd  "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TREES/"
+
+for fz in *model*trees.gz ; do
+
+	gunzip -f $fz 
+
+	f=${fz%.gz}
+
+	filename=`echo $f | cut -f1 -d'-'`
+	TIMESTAMP=`echo $f | cut -f2 -d'-'`
+	suffix=`echo $f | cut -f3 -d'-'`
+	i=`echo $suffix | cut -f1 -d'.'`
+	if [ -f $filename-$TIMESTAMP-$i-recap.trees* ]
+		then
+		echo "$filename-$TIMESTAMP-$i-recap.trees found."
+		mv *$filename-$TIMESTAMP-$i-recap.trees* "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TREES/RECAP/"
+		mv *$f* "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TREES/NOTRECAP/"
+		mv *png* "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TREES/PNGS/"
+		mv *$filename-$TIMESTAMP-$i-recap.vcf* "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/VCFS/"
+	elif [ -f RECAP/$filename-$TIMESTAMP-$i-recap.trees* ]
+		then
+		echo "$filename-$TIMESTAMP-$i-recap.trees found."
+		mv *$filename-$TIMESTAMP-$i-recap.trees* "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TREES/RECAP/"
+		mv *$f* "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TREES/NOTRECAP/"
+		mv *png* "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TREES/PNGS/"
+		mv *$filename-$TIMESTAMP-$i-recap.vcf* "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/VCFS/"
+	else
+		echo "$filename-$TIMESTAMP-$i-recap.trees not found."
+		command="python '''/home/kprovost/nas4/Analysis_SLiM/Overlaying_neutral_mutations_AND_recapitate_klp.py''' $f $mu $TIMESTAMP $recomb $Ne ;"
+		echo "----------------------------"
+		echo "Command is:"
+		echo $command
+		echo "----------------------------"
+		eval $command
+		echo "done" 
+	fi
+	echo "moving"
+	gzip -f $filename-$TIMESTAMP-$i-recap.trees
+	gzip -f $f
+	mv $filename-$TIMESTAMP-$i-recap.trees* "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TREES/RECAP/"
+	mv $f* "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TREES/NOTRECAP/"
+	# mv *png* "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TREES/PNGS/"
+	mv $filename-$TIMESTAMP-$i-recap.vcf "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/VCFS/"
+	
+	echo "starting to zip recap"
+	cd "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TREES/RECAP/"
+	for j in *trees; do echo "zipping ${j}"; gzip -f $j; done;
+	echo "starting to zip non recap"
+	cd "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TREES/NOTRECAP/"
+	for j in *trees; do echo "zipping ${j}"; gzip -f $j; done;
+
+	cd "/home/kprovost/nas4/Analysis_SLiM/FINISHED_SCALED/TREES/"
+
+done;
