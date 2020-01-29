@@ -1,0 +1,35 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=99999:00:00
+#PBS -N popgenome
+#PBS -j oe
+#PBS -m ae
+#PBS -M kprovost@amnh.org
+#PBS -k oe
+
+# change to the working directory
+#cd $PBS_O_WORKDIR
+#echo "pbsworkdir"
+#echo $PBS_O_WORKDIR
+#EXECDIR=`pwd`
+#export PATH=./:$PATH
+#echo $PATH
+
+date
+time
+
+cd /home/kprovost/nas2/Analysis_SLiM/finished
+
+# for i in slim-*/*txt; 
+# do echo $i; 
+# qsub -v filename=$i /home/kprovost/nas2/Analysis_SLiM/popgenome_job.job; 
+# done;
+
+## requires argument rpath
+
+echo $filename
+
+Rscript /home/kprovost/nas2/Analysis_SLiM/testingPopgenome_huxley.R $filename
+
+date
+time

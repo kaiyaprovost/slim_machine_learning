@@ -1,0 +1,20 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=99999:00:00
+#PBS -N bel_window_vcf
+#PBS -j oe
+#PBS -m ae
+#PBS -M kprovost@amnh.org
+#PBS -k oe
+
+# change to the working directory
+cd $PBS_O_WORKDIR
+echo "pbsworkdir"
+echo $PBS_O_WORKDIR
+EXECDIR=`pwd`
+export PATH=./:$PATH
+echo $PATH
+
+cd "/home/kprovost/nas2/convert_vcf_to_temp/"
+
+Rscript "/home/kprovost/nas2/convert_vcf_to_temp/5.testingPopgenome_VCF_bel.R"

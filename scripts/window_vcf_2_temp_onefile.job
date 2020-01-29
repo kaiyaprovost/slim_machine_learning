@@ -1,0 +1,55 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=99999:00:00
+#PBS -N one_window_vcf
+#PBS -j oe
+#PBS -m ae
+#PBS -M kprovost@amnh.org
+#PBS -k oe
+
+# change to the working directory
+cd $PBS_O_WORKDIR
+echo "pbsworkdir"
+echo $PBS_O_WORKDIR
+EXECDIR=`pwd`
+export PATH=./:$PATH
+echo $PATH
+
+# cd "/home/kprovost/nas2/convert_vcf_to_temp/"
+# for species in */; do
+# cd $species; 
+# for chr in {23..28}; do
+# cd $chr; 
+# for vcf in *o100000*window.vcf; do 
+# echo $species $chr $vcf
+# qsub -v vcffile=$vcf,spp=$species,chrom=$chr /home/kprovost/nas2/convert_vcf_to_temp/window_vcf_2_temp_onefile.job
+# done
+# done
+# done
+
+
+## needs $vcf imported from outside the script
+## needs $chr imported from outside the script
+## needs $species imported from outside the script
+
+cd "/home/kprovost/nas2/convert_vcf_to_temp/"
+echo "start"
+echo "pwd ${PWD}"
+echo "Species" ${spp} "chrom" ${chrom} "file" ${vcffile}
+echo "cd spp"
+cd $spp
+echo "cd chr"
+cd $chrom
+echo "make working"
+mkdir -p ./working/
+echo "copy vcf"
+cp -v $vcffile ./working/
+cd ./working/
+echo "script"
+Rscript /home/kprovost/nas2/convert_vcf_to_temp/5.testingPopgenome_VCF_onefile.R
+if [ -f "${vcffile}_STATS.txt" ]; then
+mv -v *STATS.txt ../
+gzip -v ../$vcffile
+fi
+cd ../
+echo "fin"

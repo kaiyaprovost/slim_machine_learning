@@ -1,0 +1,93 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=99999:00:00
+#PBS -N vcf2temp
+#PBS -j oe
+#PBS -m ae
+#PBS -M kprovost@amnh.org
+#PBS -k oe
+
+# change to the working directory
+#cd $PBS_O_WORKDIR
+#echo "pbsworkdir"
+#echo $PBS_O_WORKDIR
+#EXECDIR=`pwd`
+#export PATH=./:$PATH
+#echo $PATH
+
+cd /home/kprovost/nas2/Analysis_SLiM/
+source activate py36
+mu="1.11e-7"
+recomb="5e-7"
+Ne=8000
+echo "${mu} ${recomb} ${Ne}"
+
+cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/"
+for vcffirst in ./VCFS/*recap.vcf; do 
+
+vcffile=${vcffirst#./VCFS/}
+echo "#####
+starting vcf conversion"
+echo $vcffile
+prefix=${vcffile%-recap.vcf}
+fulltempfile=${prefix}.fulltemp
+subsettemp=${prefix}.withheader.subsettemp
+outSamp=$Ne
+numtosample=20
+locsfile="${prefix}.locs"
+echo "LOCS: ${locsfile}"
+
+
+if [ -f "$fulltempfile" ]
+then
+echo "$fulltempfile found."
+mv ./VCFS/$vcffile "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/DONE/"
+elif [ -f "./VCFS/$fulltempfile" ]
+then
+echo "$fulltempfile found."
+mv ./VCFS/$vcffile "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/DONE/"
+else
+echo "$fulltempfile not found."
+cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/"
+perl "/home/kprovost/nas2/Analysis_SLiM/vcf2MS.pl" $vcffile $fulltempfile $outSamp
+cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/"
+fi
+if [ -f "$subsettemp" ]
+then
+echo "$subsettemp found."
+elif [ -f "./VCFS/$subsettemp" ]
+then
+echo "$subsettemp found."
+else
+echo "$subsettemp not found."
+echo "subsetting"
+source activate py36
+cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/"
+mv "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/LOCS/${locsfile}" "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/${locsfile}" || mv "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/LOCS/*/${locsfile}" "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/${locsfile}"
+python "/home/kprovost/nas2/Analysis_SLiM/select_ms_individuals.py" $fulltempfile $numtosample $locsfile
+cd "/home/kprovost/nas2/Analysis_SLiM/"
+mv "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/${locsfile}" "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/LOCS/${locsfile}"
+echo "
+done subsetting"
+fi
+#gzip -f $vcffile
+#gzip -f $fulltempfile
+echo "
+moving files"
+mv $vcffirst* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/DONE/"
+mv $fulltempfile* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TEMPS/FULLTEMP/"
+mv $subsettemp* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TEMPS/"
+mv /home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/*temp /home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TEMPS/
+mv /home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/*loc* /home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/LOCS/
+done	
+#echo "
+#starting to zip vcfs"
+#cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/DONE/"
+#for i in *vcf; do echo "zipping ${i}"; gzip -f $i; done;
+#echo "
+#starting to zip fulltempfiles"
+#mv /home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/*temp /home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TEMPS/
+#cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/DONE/"
+#for i in *temp; do echo "zipping ${i}"; gzip -f $i; done;
+#cd "./home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TEMPS/FULLTEMPS/"
+#for i in *temp; do echo "zipping ${i}"; gzip -f $i; done;

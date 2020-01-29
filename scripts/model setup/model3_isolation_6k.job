@@ -1,0 +1,82 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=99999:00:00
+#PBS -N slim6k-3_iso
+#PBS -j oe
+#PBS -m ae
+#PBS -M kprovost@amnh.org
+#PBS -k oe
+
+# change to the working directory
+#cd $PBS_O_WORKDIR
+#echo "pbsworkdir"
+#echo $PBS_O_WORKDIR
+#EXECDIR=`pwd`
+#export PATH=./:$PATH
+#echo $PATH
+
+#cd /home/kprovost/nas2/Analysis_SLiM/
+cd /home/kprovost/nas2/Analysis_SLiM
+date
+time
+
+# -a flag # use all pops or not 		# default 0 
+# -B flag # number of subpops 			# default 1 
+# -c flag # competition yes/no			# default 1 -- only works if spatial 1
+# -e flag # ENM filename 				# default /Users/kprovost/Documents/Classes/Machine_Learning/SLiMTreeSeqPub-master/vireotest_slim_27x45.asc
+# -f flag # ending pop size 			# default same as $N
+# -G flag # growth generation start		# default 1000
+# -g flag # growth/contract rate 		# default 1 (no growth or contract), under 1 shrinks, over 1 grows
+# -H flag # sweep generation start		# default 1000
+# -h flag # what type of sweep wanted 	# default "n" no sweep, "h" hard sweep, "s" soft sweep ## consider adding things for balancing, etc
+# -i flag # ibd yes/no					# default 1 -- only works if spatial 1
+# -I flag # which slim file 			# default "model.slim"
+# -l flag # spatial yes/no 				# default 0
+# -M flag # migration rate 				# default 0
+# -m flag # mutation rate 				# default 1e-7
+# -N flag # beginning pop size 			# default 1000
+# -o flag # name of output file 		# default "modeltest"
+# -O flag # output generation 			# default 2000
+# -P flag # path 						# default 1 
+# -p flag # where slim is located 		# default "slim" 
+# -r flag # recombination rate 			# default 1e-8
+# -s flag # number genomes to output 	# default 20
+# -S flag # number of reps to run 		# default 2
+# -t flag # use treeseq or not 			# default 1
+# -v flag # secondary contact or not 	# default 0
+# -V flag # secondary contact start		# default 1000
+# -w flag # selection coefficient		# default 0.5 (beneficial), 0 neutral, negative deleterious
+# -x flag # niche model X dimension		# default 27
+# -y flag # niche model Y dimension		# default 45
+
+## slim-grow-neut-nospat-1pop-isol.job
+bash /home/kprovost/nas2/Analysis_SLiM/run_slim_2pop_recpacitate.sh \
+-a 0 \
+-B 2 \
+-c 1 \
+-e "/home/kprovost/nas2/Analysis_SLiM/vireotest_slim_TRANSITION_57x87_coarse.txt" \
+-f 500 \
+-G 1000 \
+-g 1.00 \
+-H 1000 \
+-h "n" \
+-I "twopopulations_latlong_burnin.slim" \
+-i 0 \
+-l 1 \
+-M 0.0 \
+-m "1e-7" \
+-N 500 \
+-o "model3_isolation_6k" \
+-O 6000 \
+-P "/home/kprovost/nas2/Analysis_SLiM/" \
+-p /home/kprovost/nas2/Analysis_SLiM/slim \
+-r "1e-8" \
+-s 20 \
+-S 100 \
+-t 1 \
+-v 0 \
+-V 5000 \
+-w "0.0" \
+-x 57 \
+-y 87 \
+>> logrecap-model3_isolation_6k.log 2>&1

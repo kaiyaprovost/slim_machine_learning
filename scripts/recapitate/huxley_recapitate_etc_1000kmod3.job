@@ -1,0 +1,159 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=99999:00:00
+#PBS -N m3-1000-huxrecap 
+#PBS -j oe
+#PBS -m ae
+#PBS -M kprovost@amnh.org
+#PBS -k oe
+
+##change to the working directory
+#cd $PBS_O_WORKDIR
+#echo "pbsworkdir"
+#echo $PBS_O_WORKDIR
+#EXECDIR=`pwd`
+#export PATH=./:$PATH
+#echo $PATH
+
+cd /home/kprovost/nas2/Analysis_SLiM/
+source activate py36
+mu="1.11e-7"
+recomb="5e-7"
+Ne=8000
+echo "${mu} ${recomb} ${Ne}"
+cd  "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TREES/"
+
+#for fz in *model3*1000k*.trees.gz; do echo $fz; gunzip -f $fz; done; 
+
+for f in *model3*1000k* ; do
+
+	filename=`echo $f | cut -f1 -d'-'`
+	TIMESTAMP=`echo $f | cut -f2 -d'-'`
+	suffix=`echo $f | cut -f3 -d'-'`
+	i=`echo $suffix | cut -f1 -d'.'`
+	if [ -f $filename-$TIMESTAMP-$i-recap.trees ]
+		then
+		echo "$filename-$TIMESTAMP-$i-recap.trees found."
+		mv *$filename-$TIMESTAMP-$i-recap.trees* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TREES/RECAP/"
+		mv *$f* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TREES/NOTRECAP/"
+		mv *png* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TREES/PNGS/"
+		mv *$filename-$TIMESTAMP-$i-recap.vcf* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/"
+	elif [ -f RECAP/$filename-$TIMESTAMP-$i-recap.trees ]
+		then
+		echo "$filename-$TIMESTAMP-$i-recap.trees found."
+		mv *$filename-$TIMESTAMP-$i-recap.trees* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TREES/RECAP/"
+		mv *$f* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TREES/NOTRECAP/"
+		mv *png* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TREES/PNGS/"
+		mv *$filename-$TIMESTAMP-$i-recap.vcf* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/"
+	else
+		echo "$filename-$TIMESTAMP-$i-recap.trees not found."
+		command="python '''/home/kprovost/nas2/Analysis_SLiM/Overlaying_neutral_mutations_AND_recapitate_klp.py''' \
+		$f \
+		$mu \
+		$TIMESTAMP \
+		$recomb \
+		$Ne ;"
+		echo "----------------------------"
+		echo "Command is:"
+		echo $command
+		echo "----------------------------"
+		eval $command
+		echo "done" 
+	fi
+	echo "
+	moving"
+	gzip -f $filename-$TIMESTAMP-$i-recap.trees
+	gzip -f $f 
+	mv $filename-$TIMESTAMP-$i-recap.trees* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TREES/RECAP/"
+	mv $f* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TREES/NOTRECAP/"
+	mv *png* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TREES/PNGS/"
+	mv $filename-$TIMESTAMP-$i-recap.vcf "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/"
+	
+	echo "
+	starting to zip recap"
+	cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TREES/RECAP/"
+	for j in *trees; do echo "zipping ${j}";
+		gzip -f $j;
+	done;
+	echo "
+	starting to zip non recap"
+	cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TREES/NOTRECAP/"
+	for j in *trees; do echo "zipping ${j}";
+		gzip -f $j;
+	done;
+
+# 	cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/"
+# 
+# 	vcffirst=$filename-$TIMESTAMP-$i-recap.vcf
+# 
+# 	vcffile=${vcffirst#./VCFS/}
+# 	echo "#####
+# 	starting vcf conversion"
+# 	echo $vcffile
+# 	prefix=${vcffile%-recap.vcf}
+# 	fulltempfile=${prefix}.fulltemp
+# 	subsettemp=${prefix}.withheader.subsettemp
+# 	outSamp=$Ne
+# 	numtosample=20
+# 	locsfile="${prefix}.locs"
+# 	echo "LOCS: ${locsfile}"
+# 
+# 	if [ -f $fulltempfile* ]
+# 		then
+# 		echo "$fulltempfile found."
+# 		mv $vcffile "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/DONE/"
+# 	else
+# 		echo "$fulltempfile not found."
+# 		cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/"
+# 		perl "/home/kprovost/nas2/Analysis_SLiM/vcf2MS.pl" $vcffile $fulltempfile $outSamp
+# 		cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/"
+# 	fi
+# 	if [ -f $subsettemp* ]
+# 		then
+# 		echo "$subsettemp found."
+# 	else
+# 	echo "$subsettemp not found."
+# 		echo "subsetting"
+# 		source activate py36
+# 		cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/"
+# 		mv "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/LOCS/${locsfile}" "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/${locsfile}" || mv "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/LOCS/*/${locsfile}" "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/${locsfile}"
+# 		python "/home/kprovost/nas2/Analysis_SLiM/select_ms_individuals.py" $fulltempfile $numtosample $locsfile
+# 		cd "/home/kprovost/nas2/Analysis_SLiM/"
+# 		mv "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/${locsfile}" "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/LOCS/${locsfile}"
+# 		echo "
+# 		done subsetting"
+# 	fi
+# 	gzip -f $vcffile
+# 	gzip -f $fulltempfile
+# 	echo "
+# 	moving files"
+# 	mv $vcffirst* "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/DONE/"
+# 	mv $fulltempfile "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TEMPS/FULLTEMP/"
+# 	mv $subsettemp "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TEMPS/"
+# 	mv /home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/*temp /home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TEMPS/
+# 	mv /home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/*loc* /home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/LOCS/
+# 
+# 	echo "
+# 	starting to zip vcfs"
+# 	cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/DONE/"
+# 	for j in *vcf; 
+# 		do 
+# 		echo "zipping ${j}"; 
+# 		gzip -f $j; 
+# 	done;
+# 	echo "
+# 	starting to zip fulltempfiles"
+# 	mv /home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/*temp /home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TEMPS/
+# 	cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/VCFS/DONE/"
+# 	for j in *temp; 
+# 		do 
+# 		echo "zipping ${j}"; 
+# 		gzip -f $j; 
+# 	done;
+# 	cd "./home/kprovost/nas2/Analysis_SLiM/FINISHED_SCALED/TEMPS/FULLTEMPS/"
+# 	for j in *temp; 
+# 		do 
+# 		echo "zipping ${j}"; 
+# 		gzip -f $j; 
+# 	done;
+done;
