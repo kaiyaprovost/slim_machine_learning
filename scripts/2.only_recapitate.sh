@@ -1,18 +1,23 @@
 #!/bin/bash
 
 source activate py36
-mu="4.42e-8"
-recomb="1e-8"
-Ne=4000
-echo "${mu} ${recomb} ${Ne}"
+cd  "/home/kprovost/nas2/Analysis_SLiM/"
 
-cd  "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/"
+for f in *-?.trees; do
+#filename=`echo $f | cut -f1 -d'-'`
+#TIMESTAMP=`echo $f | cut -f2 -d'-'`
+#suffix=`echo $f | cut -f3 -d'-'`
+#i=`echo $suffix | cut -f1 -d'.'`
 
-for f in *.trees; do
-filename=`echo $f | cut -f1 -d'-'`
-TIMESTAMP=`echo $f | cut -f2 -d'-'`
-suffix=`echo $f | cut -f3 -d'-'`
+filename=`echo $f | cut -f1-18 -d'-'`
+TIMESTAMP=`echo $f | cut -f19 -d'-'`
+suffix=`echo $f | cut -f20 -d'-'`
 i=`echo $suffix | cut -f1 -d'.'`
+
+mu=`echo $f | cut -f6-7 -d'-'`
+recomb=`echo $f | cut -f11-12 -d'-'`
+Ne=`echo $f | cut -f4 -d'-'`
+echo "${mu} ${recomb} ${Ne}"
 
 if [ -f "$filename-$TIMESTAMP-$i-recap.trees" ]
 then
@@ -21,7 +26,7 @@ else
 
 echo "$filename-$TIMESTAMP-$i-recap.trees not found."
 
-command="python '''/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/scripts/Overlaying_neutral_mutations_AND_recapitate_klp.py''' \
+command="python '''/home/kprovost/nas2/Analysis_SLiM/Overlaying_neutral_mutations_AND_recapitate_klp.py''' \
 $f \
 $mu \
 $TIMESTAMP \
@@ -42,26 +47,30 @@ fi
 echo "
 moving"
 
-gzip -f $filename-$TIMESTAMP-$i-recap.trees
+gzip -f $filename-$TIMESTAMP-$i-recap*trees
 gzip -f $f 
 
-mv $filename-$TIMESTAMP-$i-recap.trees* "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/RECAP/"
-mv $f* "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/NORECAP/"
-mv *png* "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/PNGS/"
-mv $filename-$TIMESTAMP-$i-recap.vcf "/home/kprovost/nas2/Analysis_SLiM/FINISHED/VCFS/"
+mv $f.gz /home/kprovost/nas2/Analysis_SLiM/TREES/
+mv *recap*trees.gz /home/kprovost/nas2/Analysis_SLiM/RECAPTREES/
+
+
+#mv $filename-$TIMESTAMP-$i-recap.trees* "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/RECAP/"
+#mv $f* "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/NORECAP/"
+#mv *png* "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/PNGS/"
+#mv $filename-$TIMESTAMP-$i-recap.vcf "/home/kprovost/nas2/Analysis_SLiM/FINISHED/VCFS/"
 
 done
 
-echo "
+#echo "
 
-# starting to zip recap"
+## starting to zip recap"
 
-cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/RECAP/"
-for i in *trees; do echo "zipping ${i}"; gzip -f $i; done;
+#cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/RECAP/"
+#for i in *trees; do echo "zipping ${i}"; gzip -f $i; done;
 
-echo "
+#echo "
 
-starting to zip non recap"
+#starting to zip non recap"
 
-cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/NORECAP/"
-for i in *trees; do echo "zipping ${i}"; gzip -f $i; done;
+#cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/NORECAP/"
+#for i in *trees; do echo "zipping ${i}"; gzip -f $i; done;
