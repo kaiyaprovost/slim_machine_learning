@@ -1,9 +1,18 @@
 #!/bin/bash
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=99999:00:00
+#PBS -N recapitate
+#PBS -j oe
+#PBS -m ae
+#PBS -M kprovost@amnh.org
+#PBS -k oe
 
 source activate py36
 cd  "/home/kprovost/nas2/Analysis_SLiM/"
 
-for f in *-?.trees; do
+#for f in *-?.trees; do
+
+for f in migrate-0.1-popsize-200000-mut-2.21e-9-gen-000000-recom-1e-8-ibd-1-seccon-0-pop-2-1582230455-1*trees; do
 #filename=`echo $f | cut -f1 -d'-'`
 #TIMESTAMP=`echo $f | cut -f2 -d'-'`
 #suffix=`echo $f | cut -f3 -d'-'`
@@ -17,6 +26,8 @@ i=`echo $suffix | cut -f1 -d'.'`
 mu=`echo $f | cut -f6-7 -d'-'`
 recomb=`echo $f | cut -f11-12 -d'-'`
 Ne=`echo $f | cut -f4 -d'-'`
+scaling="0.02"
+
 echo "${mu} ${recomb} ${Ne}"
 
 if [ -f "$filename-$TIMESTAMP-$i-recap.trees" ]
@@ -31,7 +42,8 @@ $f \
 $mu \
 $TIMESTAMP \
 $recomb \
-$Ne ;"
+$Ne \
+$scaling ;"
 
 echo "----------------------------"
 echo "Command is:"
@@ -60,6 +72,12 @@ mv *recap*trees.gz /home/kprovost/nas2/Analysis_SLiM/RECAPTREES/
 #mv $filename-$TIMESTAMP-$i-recap.vcf "/home/kprovost/nas2/Analysis_SLiM/FINISHED/VCFS/"
 
 done
+
+mv /home/kprovost/nas2/Analysis_SLiM/*vcf /home/kprovost/nas2/Analysis_SLiM/VCF*/
+mv /home/kprovost/nas2/Analysis_SLiM/*log* /home/kprovost/nas2/Analysis_SLiM/LOG*/
+mv /home/kprovost/nas2/Analysis_SLiM/*loc* /home/kprovost/nas2/Analysis_SLiM/LOC*/
+mv /home/kprovost/nas2/Analysis_SLiM/*header* /home/kprovost/nas2/Analysis_SLiM/HEAD*/
+
 
 #echo "
 

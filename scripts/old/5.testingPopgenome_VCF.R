@@ -2,23 +2,14 @@ rm(list = ls())
 ## Rscript "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/scripts/5.testingPopgenome_VCF.R"
 ## Rscript "/home/kprovost/nas2/convert_vcf_to_temp/5.testingPopgenome_VCF.R"
 #folder = "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER2_GENOMES/ANALYSIS/called_geno/SPECIES/VCFS/"
-folder = "/home/kprovost/nas2/convert_vcf_to_temp/"
+folder = "/home/kprovost/nas2/Analysis_SLiM/VCFS/"
 newworking= T
+sims=T
 overwrite = F
 doWindows = F
 doMultPop = F
-specieslist=c(
-  "BELLII",
-  "BILINEATA",
-  "BRUNNEICAPILLUS",
-  "CRISSALE",
-  "CURVIROSTRE",
-  "FLAVICEPS",
-  "FUSCA",
-  "MELANURA",
-  "NITENS",
-  "SINUATUS"
-)
+#specieslist=c(  "BELLII",  "BILINEATA",  "BRUNNEICAPILLUS",  "CRISSALE",  "CURVIROSTRE",  "FLAVICEPS",  "FUSCA",  "MELANURA",  "NITENS","SINUATUS")
+specieslist=""
 
 dynamic_require <- function(package) {
   if (eval(parse(text = paste("require(", package, ")"))))
@@ -28,17 +19,22 @@ dynamic_require <- function(package) {
     "require(", package, ")"
   ))))
 }
-packages = c("PopGenome", "moments", "R.utils", "gtools")
+packages = c("PopGenome", "moments", "R.utils", "gtools","progress")
 for (p in packages) {
   dynamic_require(p)
 }
+
 ## TODO:
 
 if(newworking==T) {
 pathlist = paste(folder,
   specieslist,"/",sep = "")
 } else {
+  if (sims==F) {
   pathlist = paste(folder,"working/",sep = "")
+  } else {
+    pathlist=folder
+  }
 }
 #do_vcf = T
 
@@ -51,7 +47,7 @@ for (path in pathlist) {
   setwd(path)
   files = list.files(pattern = "vcf$")
   x <- file.info(files)
-  files <- files[order(-x$size)]
+  files <- files[order(x$size)]
   
   if(newworking==T) {
   if (!(file.exists("working"))){
@@ -67,8 +63,16 @@ for (path in pathlist) {
     print(filename)
     setwd(path)
     
+    ## check if it has 7+ lines
+    temp = readLines(filename, n = 10)
+    if(length(temp) <= 6) {
+      print("-----NODATA")
+      gzip(filename)
+    } else {
+    
     if (file.exists(paste(path, "/",filename,"_STATS.txt", sep = "")) && overwrite == F ) {
       print("-----SKIPPING")
+      gzip(filename)
     } else {
       if(newworking==T) {
       file.copy(from=filename, to="working")
@@ -92,8 +96,8 @@ for (path in pathlist) {
       GENOME.class_outtable = cbind(get.sum.data(GENOME.class))
       
       numind = length(get.individuals(GENOME.class)[[1]]) ## this will be 2N
-      print(paste(numind, "individuals", sep = " "))
-      print(get.individuals(GENOME.class)[[1]])
+      #print(paste(numind, "individuals", sep = " "))
+      #print(get.individuals(GENOME.class)[[1]])
       
       ## FIRST WE DO ALL OF THE SINGLE POP STUFF
       print("GET FULL STATS PANMIXIA")
@@ -702,6 +706,692 @@ for (path in pathlist) {
       
       
     }
+    }
   }
   
+}
+
+
+
+## custom readData to debug
+myReadVCF <- function(vcffile){
+  
+  vcf       <- .Call("myReadVCFC",vcffile)
+  matrix    <- vcf[[1]]
+  positions <- vcf[[2]]
+  rownames(matrix) <- vcf[[3]]
+  
+  rm(vcf)
+  gc()
+  
+  o_b_j_sub    <- list(matrix=matrix,reference=NaN,positions=positions)
+  
+  return(o_b_j_sub)
+}
+progressBar <- function (i, total, symb_drawn = 0, symb = "=", nl = "\n") {
+  
+  # i:          loop variable
+  # total:      maximum value of i
+  # symb_drawn: number of printet symbs
+  # symb:       printed symbol
+  # nl:         newline character
+  
+  if (missing(i) && missing(total)) {
+    init = TRUE
+  }
+  else {
+    init = FALSE
+  }
+  
+  if (init == TRUE) {
+    # print a timeline
+    cat("|            :            |            :            | 100 %", nl, "|", sep = "")
+  }
+  else {
+    
+    if (symb_drawn < 51) {
+      
+      progress <- round((i/total) * 52, digits = 0) - symb_drawn
+      symb_drawn <- progress + symb_drawn
+      
+      while (progress > 0) {
+        cat(symb);
+        progress <- progress - 1
+      }
+      
+      #return(symb_drawn)
+    }
+    else {
+      if (i == total) {
+        cat("| ;-) \n")
+      }
+    }
+  }
+  
+  return(symb_drawn)
+}
+PopGenread <- function(filepath,format) {
+  
+  if(format=="VCF"){
+    res  <- myReadVCF(filepath)
+    mat  <- res$matrix
+    ref  <- res$reference
+    pos  <- res$positions
+    return(list(matrix=mat,reference=ref,positions=pos)) 
+  }
+  
+  ############################################################
+  #if(format=="VCF"){
+  # res  <- readVCFchunk(filepath)
+  # mat  <- res$matrix
+  # ref  <- res$reference
+  # pos  <- res$positions
+  # return(list(matrix=mat,reference=ref,positions=pos)) 
+  #}
+  
+  #if(format=="VCFhap"){
+  # res  <- readVCFchunkHap(filepath)
+  # mat  <- res$matrix
+  # ref  <- res$reference
+  # pos  <- res$positions
+  # return(list(matrix=mat,reference=ref,positions=pos)) 
+  #}
+  
+  #if(format=="VCFtri"){
+  # res  <- readVCFchunk_tri(filepath)
+  # mat  <- res$matrix
+  # ref  <- res$reference
+  # pos  <- res$positions
+  # return(list(matrix=mat,reference=ref,positions=pos)) 
+  #}
+  
+  #if(format=="VCFtet"){
+  # res  <- readVCFchunk_tet(filepath)
+  # mat  <- res$matrix
+  # ref  <- res$reference
+  # pos  <- res$positions
+  # return(list(matrix=mat,reference=ref,positions=pos)) 
+  #}
+  ###############################################################
+  
+  if(format=="HapMap"){
+    res  <- parse_HapMap(filepath)
+    mat  <- res$matrix
+    ref  <- res$reference
+    pos  <- res$positions
+    return(list(matrix=mat,reference=ref,positions=pos)) 
+  }
+  
+  if(format=="RData"){
+    XXX   <- load(filepath)
+    mmm   <- get(XXX[1])
+    return(list(matrix=mmm$matrix,reference=NaN,positions=mmm$positions))
+  }
+  
+  
+  if(format=="nexus"){
+    
+    matrix     <- my_read.nexus(filepath)
+    nn         <- rownames(matrix)
+    
+    number     <- c(1,1,1,1,2,2,3,3,4,4,5,5,5,6)
+    nuc        <- c("T","t","U","u","C","c","G","g","A","a","N","n","?","-")
+    
+    
+    matrix <- apply(matrix,1,function(x){return(as.integer(number[match(x,nuc)]))})
+    matrix <- t(matrix)
+    
+    matrix[is.na(matrix)] <- 5
+    rownames(matrix)      <- nn
+    attr(matrix,"path")   <- filepath
+    return(list(matrix=matrix,reference=NaN,positions=NaN))
+  }
+  
+  
+  gen            <-  .Call("readdna",filepath)
+  #gen            <-  .Call("my_read_fasta",filepath)
+  rownames(gen)  <-  gsub(" ","",rownames(gen))
+  rownames(gen)  <-  gsub("\r","",rownames(gen))
+  if(is.null(gen)){gen <- NaN}  
+  
+  #----ape
+  #  gen     <- read.dna(filepath,format,as.character=TRUE) # ape package
+  #  r.names <- rownames(gen)
+  #  gen     <- .Call("code_nucs",gen)
+  #  rownames(gen) <- r.names
+  #----ape  
+  
+  return(list(matrix=gen,reference=NaN,positions=NaN))
+  
+  #############################################################
+  
+  
+}
+readData_2 <- function(path, populations = FALSE, outgroup = FALSE, include.unknown = FALSE, 
+                       gffpath = FALSE, format = "fasta", parallized = FALSE, progress_bar_switch = TRUE, 
+                       FAST = FALSE, big.data = FALSE, SNP.DATA = FALSE) 
+{
+  if (!file.exists(path)) {
+    stop("Cannot find path !")
+  }
+  if (!file.info(path)[2]) {
+    stop("Put your file/files in a folder !")
+  }
+  if (gffpath[1] != FALSE) {
+    if (!file.exists(gffpath)) {
+      stop("Cannot find gff path !")
+    }
+    if (!file.info(gffpath)[2]) {
+      stop("Put your file/files in a folder ! (GFF)")
+    }
+  }
+  if (format == "HapMap") {
+    SNP.DATA = TRUE
+    FAST = TRUE
+  }
+  if (format == "VCF") {
+    SNP.DATA = TRUE
+    FAST = TRUE
+  }
+  if (SNP.DATA) {
+    big.data = TRUE
+  }
+  if (parallized) {
+    n.cores <- parallel::detectCores()
+    files <- list.files(path)
+    split_files <- split(files, sort(rep(1:n.cores, ceiling(length(files)/n.cores))))
+    if (gffpath[1] != FALSE) {
+      gff_files <- list.files(gffpath)
+      split_files_gff <- split(gff_files, sort(rep(1:n.cores, 
+                                                   ceiling(length(gff_files)/n.cores))))
+    }
+    xxx <- NULL
+    yyy <- NULL
+    for (i in 1:n.cores) {
+      command <- paste("mkdir split", i, sep = "")
+      system(command)
+      filename <- paste("split", i, sep = "")
+      filename_path <- file.path(getwd(), filename)
+      sapply(split_files[[i]], function(x) {
+        command <- file.path(path, x)
+        command <- paste("cp", command, filename_path, 
+                         sep = " ")
+        system(command)
+      })
+      xxx <- c(xxx, filename_path)
+      if (gffpath[1] != FALSE) {
+        command <- paste("mkdir GFFRObjects_split", i, 
+                         sep = "")
+        system(command)
+        filename <- paste("GFFRObjects_split", i, sep = "")
+        filename_path <- file.path(getwd(), filename)
+        sapply(split_files_gff[[i]], function(x) {
+          command <- file.path(gffpath, x)
+          command <- paste("cp", command, filename_path, 
+                           sep = " ")
+          system(command)
+        })
+        yyy <- c(yyy, filename_path)
+      }
+    }
+    if (gffpath[1] == FALSE) {
+      rueck <- parallel::mclapply(xxx, readData, format = format, 
+                                  parallized = FALSE, progress_bar_switch = FALSE, 
+                                  FAST = FAST, big.data = big.data, SNP.DATA = SNP.DATA, 
+                                  include.unknown = include.unknown, mc.cores = n.cores, 
+                                  mc.silent = TRUE)
+    }
+    else {
+      cat("Calculation ... \n")
+      INPUT <- vector("list", n.cores)
+      for (iii in 1:n.cores) {
+        INPUT[[iii]] <- c(xxx[iii], yyy[iii])
+      }
+      rueck <- parallel::mclapply(INPUT, function(x) {
+        daten <- x[1]
+        gffdaten <- x[2]
+        TT <- readData(path = daten, gffpath = gffdaten, 
+                       format = format, parallized = FALSE, progress_bar_switch = FALSE, 
+                       FAST = FAST, big.data = big.data, SNP.DATA = SNP.DATA, 
+                       include.unknown = include.unknown)
+        return(TT)
+      }, mc.cores = n.cores, mc.silent = TRUE, mc.preschedule = TRUE)
+    }
+    genome <- concatenate(rueck, n.cores)
+    genome@basepath <- file.path(path)
+    genome@project <- file.path(path)
+    liste <- list.files(path, full.names = TRUE)
+    genome@genelength <- length(liste)
+    if (FAST) {
+      genome@Pop_Slide$calculated <- TRUE
+    }
+    else {
+      genome@Pop_Slide$calculated <- FALSE
+    }
+    if (!is.list(populations)) {
+      genome@populations <- list(NULL)
+    }
+    else {
+      genome@populations <- populations
+    }
+    genome@outgroup <- outgroup
+    for (i in 1:n.cores) {
+      command <- paste("rm -r split", i, sep = "")
+      system(command)
+      if (gffpath[1] != FALSE) {
+        command <- paste("rm -r GFFRObjects_split", i, 
+                         sep = "")
+        system(command)
+      }
+    }
+    cat("\n")
+    return(genome)
+  }
+  methods <- "DATA"
+  npops <- length(populations)
+  popnames <- paste("pop", 1:npops)
+  liste <- list.files(path, full.names = TRUE)
+  liste2 <- list.files(path)
+  liste3 <- gsub("\\.[a-zA-Z]*", "", liste2)
+  ordered <- as.numeric(gsub("\\D", "", liste))
+  if (!any(is.na(ordered))) {
+    names(ordered) <- 1:length(ordered)
+    ordered <- sort(ordered)
+    ids <- as.numeric(names(ordered))
+    liste <- liste[ids]
+    liste2 <- liste2[ids]
+    liste3 <- liste3[ids]
+  }
+  gff_objects <- vector("list", length(liste))
+  SNP.GFF <- FALSE
+  GFF.BOOL <- FALSE
+  if (gffpath[1] != FALSE) {
+    GFF.BOOL <- TRUE
+    gff_liste <- list.files(gffpath, full.names = TRUE)
+    gff_liste2 <- list.files(gffpath)
+    gff_liste3 <- gsub("\\.[a-zA-Z]*", "", gff_liste2)
+    treffer <- match(liste3, gff_liste3)
+    if (any(is.na(treffer))) {
+      cat("WARNING:: Could not find GFF files for:\n")
+      cat(liste3[is.na(treffer)], "\n", sep = ",")
+    }
+    gff_liste <- gff_liste[treffer]
+  }
+  if (npops > 1) {
+    if (outgroup[1] != FALSE) {
+      poppairs <- choose(npops + 1, 2)
+      pairs <- combn(1:(npops + 1), 2)
+    }
+    else {
+      poppairs <- choose(npops, 2)
+      pairs <- combn(1:(npops), 2)
+    }
+    nn <- paste("pop", pairs[1, 1], "/pop", pairs[2, 1], 
+                sep = "")
+    if (dim(pairs)[2] > 1) {
+      for (xx in 2:dim(pairs)[2]) {
+        m <- paste("pop", pairs[1, xx], "/pop", pairs[2, 
+                                                      xx], sep = "")
+        nn <- c(nn, m)
+      }
+    }
+  }
+  else {
+    poppairs <- 1
+    nn <- "pop1"
+  }
+  sizeliste <- length(liste)
+  genome <- new("GENOME")
+  genome@basepath <- file.path(path)
+  genome@project <- file.path(path)
+  genome@genelength <- sizeliste
+  if (!is.list(populations)) {
+    genome@populations <- list(NULL)
+  }
+  else {
+    genome@populations <- populations
+  }
+  genome@poppairs <- nn
+  genome@outgroup <- outgroup
+  genome@region.names <- liste2
+  DATABOOL <- is.element("DATA", methods)
+  nsites <- integer(sizeliste)
+  nsites2 <- integer(sizeliste)
+  region.data <- new("region.data")
+  region.stats <- new("region.stats")
+  init <- vector("list", sizeliste)
+  init2 <- numeric(sizeliste)
+  init3 <- rep(NaN, sizeliste)
+  populationsX <- init
+  populations2 <- init
+  popmissing <- init
+  outgroupX <- init
+  outgroup2 <- init
+  CodingSNPS <- init
+  UTRSNPS <- init
+  IntronSNPS <- init
+  ExonSNPS <- init
+  GeneSNPS <- init
+  reading.frame <- init
+  rev.strand <- init
+  Coding.matrix <- init
+  Coding.matrix2 <- init
+  UTR.matrix <- init
+  Intron.matrix <- init
+  Exon.matrix <- init
+  Gene.matrix <- init
+  Coding.region <- init2
+  UTR.region <- init2
+  Intron.region <- init2
+  Exon.region <- init2
+  Gene.region <- init2
+  transitions <- init
+  biallelic.matrix <- init
+  biallelic.sites <- init
+  biallelic.sites2 <- init
+  reference <- init
+  matrix_codonpos <- init
+  synonymous <- init
+  matrix_freq <- init
+  n.singletons <- init
+  polyallelic.sites <- init
+  n.nucleotides <- init
+  biallelic.compositions <- init
+  biallelic.substitutions <- init
+  minor.alleles <- init
+  codons <- init
+  sites.with.gaps <- init
+  sites.with.unknowns <- init
+  n.valid.sites <- init2
+  n.gaps <- init2
+  n.unknowns <- init2
+  n.polyallelic.sites <- init2
+  n.biallelic.sites <- init2
+  trans.transv.ratio <- init3
+  print("CHECKPOINT 1")
+  if (progress_bar_switch) {
+    progr <- progressBar()
+  }
+  print("CHECKPOINT 2")
+  #print(sizeliste)
+  #print(head(liste))
+  for (xx in 1:sizeliste) {
+    if (!progress_bar_switch) {
+      print(liste[xx])
+    }
+    print("CHECKPOINT 3")
+    CCC <- try(PopGenread(liste[xx], format), silent = TRUE)
+    print("CHECKPOINT 4")
+    #print(head(CCC))
+    print("CHECKPOINT 4.1")
+    #print(head(CCC$matrix))
+    print("CHECKPOINT 4.2")
+    if (is.na(CCC$matrix[1])) {
+      next
+    }
+    print("CHECKPOINT 5")
+    gen <- CCC$matrix
+    pos <- CCC$positions
+    ref <- CCC$reference
+    gff.object.exists <- FALSE
+    FIT <- FALSE
+    print("CHECKPOINT 6")
+    if (GFF.BOOL) {
+      gff.object.exists <- TRUE
+      if (SNP.DATA) {
+        if (!is.na(gff_liste[xx])) {
+          if (length(grep("GFFRObjects", gffpath)) != 
+              0) {
+            Robj <- load(gff_liste[xx])
+            gff_object <- get(Robj[1])
+          }
+          else {
+            gff_object <- gffRead(gff_liste[xx])
+          }
+          gff_object_fit <- fitting_gff_fast(pos, gff_object)
+          FIT <- TRUE
+        }
+        else {
+          gff.object.exists <- FALSE
+        }
+      }
+      else {
+        if (!is.na(gff_liste[xx])) {
+          gff_object <- gffRead(gff_liste[xx])
+        }
+        else {
+          gff.object.exists <- FALSE
+        }
+      }
+      if (gff.object.exists) {
+        gff_object <- parse_gff(gff_object, SNP.DATA = SNP.DATA)
+        if (FIT) {
+          gff_object_fit <- parse_gff(gff_object_fit, 
+                                      SNP.DATA = SNP.DATA)
+          GLOBAL.GFF$GFF <- NULL
+        }
+        else {
+          gff_object_fit <- gff_object
+        }
+      }
+      else {
+        gff_object <- FALSE
+        gff_object_fit <- FALSE
+      }
+    }
+    else {
+      gff_object <- FALSE
+      gff_object_fit <- FALSE
+    }
+    if (is.matrix(gen)) {
+      nsites[xx] <- dim(gen)[2]
+      nsites2[xx] <- dim(gen)[2]
+      result <- popgen(gen, Populations = populations, 
+                       outgroup = outgroup, methods = methods, include.unknown = include.unknown, 
+                       gff = gff_object_fit, FAST, SNP.DATA)
+      rm(gen)
+    }
+    else {
+      result <- NA
+      next
+    }
+    if (progress_bar_switch) {
+      progr <- progressBar(xx, sizeliste, progr)
+    }
+    if (xx == ceiling(sizeliste/2)) {
+      gc()
+    }
+    if (is.list(result)) {
+      populationsX[[xx]] <- result$populations
+      populations2[[xx]] <- result$populations2
+      popmissing[[xx]] <- result$popmissing
+      outgroupX[[xx]] <- result$outgroup
+      outgroup2[[xx]] <- result$outgroup2
+      datt <- result$data.sum
+      CodingSNPS[[xx]] <- datt$CodingSNPS
+      UTRSNPS[[xx]] <- datt$UTRSNPS
+      IntronSNPS[[xx]] <- datt$IntronSNPS
+      ExonSNPS[[xx]] <- datt$ExonSNPS
+      GeneSNPS[[xx]] <- datt$GeneSNPS
+      if (GFF.BOOL & !gff.object.exists) {
+        fillinit <- vector(, length(datt$biallelic.sites))
+        CodingSNPS[[xx]] <- fillinit
+        UTRSNPS[[xx]] <- fillinit
+        IntronSNPS[[xx]] <- fillinit
+        ExonSNPS[[xx]] <- fillinit
+        GeneSNPS[[xx]] <- fillinit
+      }
+      transitions[[xx]] <- datt$transitions
+      if (is.na(pos[1])) {
+        biallelic.sites[[xx]] <- datt$biallelic.sites
+        polyallelic.sites[[xx]] <- datt$polyallelic.sites
+        sites.with.gaps[[xx]] <- datt$sites.with.gaps
+        sites.with.unknowns[[xx]] <- datt$sites.with.unknowns
+      }
+      else {
+        biallelic.sites2[[xx]] <- datt$biallelic.sites
+        biallelic.sites[[xx]] <- pos[datt$biallelic.sites]
+        nsites[xx] <- biallelic.sites[[xx]][length(biallelic.sites[[xx]])]
+        polyallelic.sites[[xx]] <- pos[datt$polyallelic.sites]
+        sites.with.gaps[[xx]] <- pos[datt$sites.with.gaps]
+        sites.with.unknowns[[xx]] <- pos[datt$sites.with.unknowns]
+      }
+      if (!big.data) {
+        biallelic.matrix[[xx]] <- datt$biallelic.matrix
+        colnames(biallelic.matrix[[xx]]) <- biallelic.sites[[xx]]
+        if (GFF.BOOL & gff.object.exists) {
+          reading.frame[[xx]] <- gff_object$reading.frame
+          rev.strand[[xx]] <- gff_object$rev.strand
+          Coding.matrix[[xx]] <- gff_object$Coding
+          UTR.matrix[[xx]] <- gff_object$UTR
+          Intron.matrix[[xx]] <- gff_object$Intron
+          Exon.matrix[[xx]] <- gff_object$Exon
+          Gene.matrix[[xx]] <- gff_object$Gene
+        }
+      }
+      else {
+        biallelic.matrix[[xx]] <- ff(datt$biallelic.matrix, 
+                                     dim = dim(datt$biallelic.matrix))
+        close(biallelic.matrix[[xx]])
+        dimnames(biallelic.matrix[[xx]]) <- list(rownames(datt$biallelic.matrix), 
+                                                 biallelic.sites[[xx]])
+        if (GFF.BOOL & gff.object.exists) {
+          if (dim(gff_object$Coding)[1] > 0) {
+            fill <- as.matrix(gff_object$Coding)
+            Coding.matrix[[xx]] <- ff(fill, dim = dim(fill))
+            close(Coding.matrix[[xx]])
+            if (dim(gff_object_fit$Coding)[1] > 0) {
+              reading.frame[[xx]] <- gff_object_fit$reading.frame
+              rev.strand[[xx]] <- gff_object_fit$rev.strand
+              fill <- as.matrix(gff_object_fit$Coding)
+              Coding.matrix2[[xx]] <- ff(fill, dim = dim(fill))
+              close(Coding.matrix2[[xx]])
+            }
+          }
+          if (dim(gff_object$UTR)[1] > 0) {
+            fill <- as.matrix(gff_object$UTR)
+            UTR.matrix[[xx]] <- ff(fill, dim = dim(fill))
+            close(UTR.matrix[[xx]])
+          }
+          if (dim(gff_object$Intron)[1] > 0) {
+            fill <- as.matrix(gff_object$Intron)
+            Intron.matrix[[xx]] <- ff(fill, dim = dim(fill))
+            close(Intron.matrix[[xx]])
+          }
+          if (dim(gff_object$Exon)[1] > 0) {
+            fill <- as.matrix(gff_object$Exon)
+            Exon.matrix[[xx]] <- ff(fill, dim = dim(fill))
+            close(Exon.matrix[[xx]])
+          }
+          if (dim(gff_object$Gene)[1] > 0) {
+            fill <- as.matrix(gff_object$Gene)
+            Gene.matrix[[xx]] <- ff(fill, dim = dim(fill))
+            close(Gene.matrix[[xx]])
+          }
+        }
+      }
+      if (!is.na(ref[1])) {
+        reference[[xx]] <- ref[datt$biallelic.sites]
+      }
+      matrix_codonpos[[xx]] <- datt$matrix_codonpos
+      synonymous[[xx]] <- datt$synonymous
+      matrix_freq[[xx]] <- datt$matrix_freq
+      n.singletons[[xx]] <- datt$n.singletons
+      n.nucleotides[[xx]] <- datt$n.nucleotides
+      biallelic.compositions[[xx]] <- datt$biallelic.compositions
+      biallelic.substitutions[[xx]] <- datt$biallelic.substitutions
+      minor.alleles[[xx]] <- datt$minor.alleles
+      codons[[xx]] <- datt$codons
+      n.valid.sites[xx] <- datt$n.valid.sites
+      n.gaps[xx] <- length(datt$sites.with.gaps)
+      n.unknowns[xx] <- length(datt$sites.with.unknowns)
+      n.polyallelic.sites[xx] <- length(datt$polyallelic.sites)
+      n.biallelic.sites[xx] <- length(datt$biallelic.sites)
+      trans.transv.ratio[xx] <- datt$trans.transv.ratio
+      Coding.region[xx] <- datt$Coding_region_length
+      UTR.region[xx] <- datt$UTR_region_length
+      Intron.region[xx] <- datt$Intron_region_length
+      Exon.region[xx] <- datt$Exon_region_length
+      Gene.region[xx] <- datt$Gene_region_length
+    }
+  }
+  print("CHECKPOINT 10")
+  region.data@populations <- populationsX
+  region.data@populations2 <- populations2
+  region.data@popmissing <- popmissing
+  region.data@outgroup <- outgroupX
+  region.data@outgroup2 <- outgroup2
+  region.data@CodingSNPS <- CodingSNPS
+  region.data@UTRSNPS <- UTRSNPS
+  region.data@IntronSNPS <- IntronSNPS
+  region.data@ExonSNPS <- ExonSNPS
+  region.data@GeneSNPS <- GeneSNPS
+  region.data@reading.frame <- reading.frame
+  region.data@rev.strand <- rev.strand
+  region.data@Coding.matrix <- Coding.matrix
+  region.data@Coding.matrix2 <- Coding.matrix2
+  region.data@UTR.matrix <- UTR.matrix
+  region.data@Intron.matrix <- Intron.matrix
+  region.data@Exon.matrix <- Exon.matrix
+  region.data@Gene.matrix <- Gene.matrix
+  region.data@transitions <- transitions
+  region.data@biallelic.matrix <- biallelic.matrix
+  region.data@biallelic.sites <- biallelic.sites
+  region.data@biallelic.sites2 <- biallelic.sites2
+  region.data@reference <- reference
+  region.data@matrix_codonpos <- matrix_codonpos
+  region.data@synonymous <- synonymous
+  region.data@matrix_freq <- matrix_freq
+  region.data@n.singletons <- n.singletons
+  region.data@polyallelic.sites <- polyallelic.sites
+  region.data@n.nucleotides <- n.nucleotides
+  region.data@biallelic.compositions <- biallelic.compositions
+  region.data@biallelic.substitutions <- biallelic.substitutions
+  region.data@minor.alleles <- minor.alleles
+  region.data@codons <- codons
+  region.data@sites.with.gaps <- sites.with.gaps
+  region.data@sites.with.unknowns <- sites.with.unknowns
+  region.stats@nucleotide.diversity <- init
+  region.stats@haplotype.diversity <- init
+  region.stats@haplotype.counts <- init
+  region.stats@minor.allele.freqs <- init
+  region.stats@biallelic.structure <- init
+  region.stats@linkage.disequilibrium <- init
+  genome@big.data <- big.data
+  names(nsites) <- liste2
+  genome@n.sites <- nsites
+  genome@n.sites2 <- nsites2
+  genome@n.valid.sites <- n.valid.sites
+  genome@n.gaps <- n.gaps
+  genome@n.unknowns <- n.unknowns
+  genome@n.polyallelic.sites <- n.polyallelic.sites
+  genome@n.biallelic.sites <- n.biallelic.sites
+  genome@trans.transv.ratio <- trans.transv.ratio
+  genome@Coding.region <- Coding.region
+  genome@UTR.region <- UTR.region
+  genome@Intron.region <- Intron.region
+  genome@Exon.region <- Exon.region
+  genome@Gene.region <- Gene.region
+  genome@region.data <- region.data
+  genome@region.stats <- region.stats
+  genome@Pop_Neutrality$calculated <- FALSE
+  genome@Pop_FSTN$calculated <- FALSE
+  genome@Pop_FSTH$calculated <- FALSE
+  genome@Pop_MK$calculated <- FALSE
+  genome@Pop_Linkage$calculated <- FALSE
+  genome@Pop_Recomb$calculated <- FALSE
+  genome@Pop_Slide$calculated <- FALSE
+  genome@Pop_Detail$calculated <- FALSE
+  if (FAST) {
+    genome@Pop_Slide$calculated <- TRUE
+  }
+  if (GFF.BOOL) {
+    genome@gff.info <- TRUE
+  }
+  else {
+    genome@gff.info <- FALSE
+  }
+  genome@snp.data <- SNP.DATA
+  cat("\n")
+  return(genome)
 }

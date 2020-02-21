@@ -47,6 +47,13 @@ except:
     ## 1000 
     exit()
 
+try:
+    scaling = float(sys.argv[6])
+    print("\tScaling factor (-X) is: ",scaling)
+except:
+    print("Scaling factor not given, defaulting to 1")
+    scaling=1.0
+
 splitfile = filename.split("/")
 
 file = splitfile[-1]
@@ -58,7 +65,8 @@ if path=="/":
 prefix = ".".join(file.split(".")[:-1])
 suffix = file.split(".")[-1]
 
-newfilename = path+prefix+"-recap_"+str(mu)+"-"+str(recomb)+"-"+str(Ne)+"."+suffix
+newfilename = path+prefix+"-recap_"+str(mu)+"-"+str(recomb)+"-"+str(Ne)+"-"+str(scaling)+"."+suffix
+vcffilename = prefix+"-recap_"+str(mu)+"-"+str(recomb)+"-"+str(Ne)+"-"+str(scaling)+".vcf"
 
 ## import os
 exists = os.path.isfile(newfilename)
@@ -67,6 +75,11 @@ if exists:
     print("\t~~~~~Recap trees exists -- exiting")
     exit()
 
+if(scaling != 1):
+	print("\tScaling parameters")
+	mu=mu*scaling
+	recomb=recomb*scaling
+	Ne=int(Ne*scaling)
 
 print("\tLoading: "+filename)
 ts = pyslim.load(filename) ## do not simplify 
@@ -114,7 +127,7 @@ print("\tPrinting to file:",newfilename)
 mutated.dump(newfilename)
 
 print("\tCreating VCF")
-with open(prefix+"-recap_"+str(mu)+"-"+str(recomb)+"-"+str(Ne)+".vcf", "w") as vcf_file:
+with open(vcffilename, "w") as vcf_file:
     mutated.write_vcf(vcf_file, 2)
     
     # Plot the tree heights after recapitation
