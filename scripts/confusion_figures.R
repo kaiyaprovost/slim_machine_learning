@@ -5,6 +5,289 @@ library(ggplot2)
 library(intergraph)
 library(RColorBrewer)
 
+## make a comparison between sims and empricail
+dffile_all = "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER2_GENOMES/ANALYSIS/called_geno/alldf.txt" ## with or without _trim
+df = read.csv(dffile_all,sep="\t",skip=1)
+head(df)
+dim(df)
+sum(complete.cases(df))
+
+dffile_trim = "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER2_GENOMES/ANALYSIS/called_geno/alldf_trim.txt" ## with or without _trim
+dft = read.csv(dffile_trim,sep="\t",skip=0)
+head(dft)
+dim(dft)
+sum(complete.cases(dft))
+
+dfsub = df[,c(1:40)]
+sum(complete.cases(dfsub))
+
+dftsub = dft[,c(1:3,5,8:9,11:13,16:17,19:24,27:29,31:33,35,37:40)]
+sum(complete.cases(dftsub))
+
+## pcaplot of empirical vs not
+dffull = dfsub[complete.cases(dfsub),]
+dftfull = dftsub[complete.cases(dftsub),]
+
+df_meta = dffull[,c(1:15)]
+dft_meta = dftfull[,1:5]
+
+dffull = sapply(dffull[,c(16:ncol(dffull))], as.numeric)
+dftfull = sapply(dftfull[6:ncol(dftfull)], as.numeric)
+
+## sort the data
+dffull = dffull[,order(colnames(dffull))]
+df_meta = df_meta[order(dffull[,1],dffull[,2],dffull[,3]),]
+dffull = dffull[order(dffull[,1],dffull[,2],dffull[,3]),]
+df_meta = df_meta[,order(colnames(df_meta))]
+
+
+dftfull = dftfull[,order(colnames(dftfull))]
+dft_meta = dft_meta[order(dftfull[,1],dftfull[,2],dftfull[,3]),]
+dftfull = dftfull[order(dftfull[,1],dftfull[,2],dftfull[,3]),]
+dft_meta = dft_meta[,order(colnames(dft_meta))]
+
+all.equal(dffull,dftfull)
+## dffull and dftfull are exactly the same in theory but not in pactice
+pca = prcomp(dffull,center=T,scale=T)
+summary(pca)
+data = as.data.frame(pca$x)
+withpca = cbind(df_meta,data)
+
+empircal = withpca[withpca$DEMOG=="EMPIRICAL",]
+sims = withpca[withpca$DEMOG!="EMPIRICAL",]
+sims$TREATMENT = paste(sims$DEMOG,sims$IBD,sims$YEAR)
+sims$YEAR = droplevels(sims$YEAR)
+empircal$SPECIES = droplevels(empircal$SPECIES)
+levels(empircal$SPECIES) = sort(unique(empircal$SPECIES))
+
+
+par(mfrow=c(2,2),mar=c(0,0,0,0))
+for(part in 1:4){
+plot(withpca$PC1,withpca$PC2,type="n")
+palette(c("purple","magenta","cyan","red","green"))
+test = lapply(1:length(levels(sims$SIMDEFAULT.)),FUN=function(y) {
+  year=levels(sims$SIMDEFAULT.)[y]
+  k1000=sims[sims$SIMDEFAULT.==year,16:17]
+  hpts=chull(k1000)
+  hpts <- c(hpts, hpts[1])
+  mean=colMeans(k1000)
+  meanx=median(k1000[,1])
+  meany=median(k1000[,2])
+  
+  lines(k1000[hpts,],
+        col=y,lty=1,lwd=2)
+  coords=k1000[hpts,]
+  text(x=meanx,y=meany,labels=year,col=y)
+  
+  return(coords)
+})
+palette(c("blue","darkred","darkblue","goldenrod",
+          "darkgreen","darkmagenta","cornflowerblue",
+          "orange","darkorange"))
+test2 = lapply(1+(10*(part-1)):min(10+(10*(part-1)),length(levels(empircal$CHROMOSOME))),FUN=function(y) {
+  year=levels(empircal$CHROMOSOME)[y]
+  k1000=empircal[empircal$CHROMOSOME==year,16:17]
+  hpts=chull(k1000)
+  hpts <- c(hpts, hpts[1])
+  coords=k1000[hpts,]
+  mean=colMeans(k1000)
+  lines(k1000[hpts,],
+          col=y,lty=2,lwd=1)
+  text(x=mean[1],y=mean[2],labels=year,col=y,cex=0.5)
+  return(coords)
+})
+}
+
+
+par(mfrow=c(2,5),mar=c(0,0,0,0))
+for(sppnum in 1:10) {
+  print(sppnum)
+  plot(withpcat$PC1,withpcat$PC2,type="n")
+  palette(c("purple","magenta","cyan","red","green"))
+  #points(sims$PC1,
+  #       sims$PC2,
+  #       col=as.numeric(as.factor(sims$YEAR)),
+  #       pch=(as.numeric(as.factor(sims$YEAR))),
+  #       cex=1)
+  
+  test = lapply(1:length(levels(sims$YEAR)),FUN=function(y) {
+    year=levels(sims$YEAR)[y]
+    k1000=sims[sims$YEAR==year,16:17]
+    hpts=chull(k1000)
+    hpts <- c(hpts, hpts[1])
+    lines(k1000[hpts,],
+          col=y,lty=1,lwd=2)
+    coords=k1000[hpts,]
+    return(coords)
+  })
+  names(test) = levels(sims$YEAR)
+  palette(c("darkred","darkorange","goldenrod",
+            "black","brown","darkblue","darkgreen","darkcyan",
+            "darkmagenta","darkslategrey"))
+  test2 = lapply(1:length(levels(empircal$SPECIES)),FUN=function(y) {
+    
+    year=levels(empircal$SPECIES)[y]
+    k1000=empircal[empircal$SPECIES==year,16:17]
+    hpts=chull(k1000)
+    hpts <- c(hpts, hpts[1])
+    coords=k1000[hpts,]
+    if(y==sppnum){
+      lines(k1000[hpts,],
+            col="black",lty=2,lwd=3)
+      text(x=10,y=-5,labels=year)
+    }
+    return(coords)
+  })
+  names(test2) = levels(empircal$SPECIES)
+}
+
+
+## just use dftfull
+
+pcat = prcomp(dftfull,center=T,scale=T)
+summary(pcat)
+datat = as.data.frame(pcat$x)
+withpcat = cbind(dft_meta,datat)
+
+empircal = withpcat[withpcat$DEMOG=="EMPIRICAL",]
+sims = withpcat[withpcat$DEMOG!="EMPIRICAL",]
+sims$TREATMENT = paste(sims$DEMOG,sims$IBD,sims$YEAR)
+sims$YEAR = droplevels(sims$YEAR)
+empircal$SPECIES = droplevels(empircal$SPECIES)
+
+## plot the pcas relative to the treatments 
+par(mfrow=c(2,5),mar=c(0,0,0,0))
+for(sppnum in 1:10) {
+plot(withpcat$PC1,withpcat$PC2,type="n")
+palette(c("purple","magenta","cyan","red","green"))
+points(sims$PC1,
+       sims$PC2,
+       col=as.numeric(as.factor(sims$YEAR)),
+       pch=(as.numeric(as.factor(sims$YEAR))),
+       cex=1,type="n")
+
+test = lapply(1:length(levels(sims$YEAR)),FUN=function(y) {
+  year=levels(sims$YEAR)[y]
+  k1000=sims[sims$YEAR==year,6:7]
+  hpts=chull(k1000)
+  hpts <- c(hpts, hpts[1])
+  lines(k1000[hpts,],
+        col=y,lty=1,lwd=2)
+  coords=k1000[hpts,]
+  return(coords)
+})
+names(test) = levels(sims$YEAR)
+palette(c("darkred","darkorange","goldenrod",
+                      "black","brown","darkblue","darkgreen","darkcyan",
+                      "darkmagenta","darkslategrey"))
+test2 = lapply(1:length(levels(empircal$SPECIES)),FUN=function(y) {
+  
+  year=levels(empircal$SPECIES)[y]
+  k1000=empircal[empircal$SPECIES==year,6:7]
+  hpts=chull(k1000)
+  hpts <- c(hpts, hpts[1])
+  coords=k1000[hpts,]
+  if(y==sppnum){
+  lines(k1000[hpts,],
+        col="black",lty=2,lwd=3)
+  text(x=10,y=-5,labels=year)
+  }
+  return(coords)
+})
+names(test2) = levels(empircal$SPECIES)
+}
+
+
+points_in_polys = lapply(1:nrow(empircal),FUN=function(x) {
+  polyS = empircal[x,6:7]
+  species=as.character(empircal$SPECIES[x])
+  
+  df = data.frame(matrix(nrow=nrow(polyS),ncol=length(test)+3))
+  for(i in 1:length(test)){
+    polyY = as.data.frame(test[i][1])
+    pointtest = point.in.polygon(point.x=polyS$PC1,
+                     point.y=polyS$PC2,
+                     pol.x=polyY[,1],
+                     pol.y=polyY[,2])
+    df[,i] = c(pointtest)
+  }
+  df[,length(test)+1] = polyS$PC1
+  df[,length(test)+2] = polyS$PC2
+  df[,length(test)+3] = species
+  colnames(df) = c(names(test),"PC1","PC2","SPECIES")
+  return(df)
+}
+) 
+points_in_polys = do.call("rbind", points_in_polys)
+
+poi_in_pol = points_in_polys[,c(1:4,7)]
+poi_in_pol %>% dplyr::group_by_all() %>% dplyr::summarise(COUNT = dplyr::n()) -> poi_in_pol
+poi_in_pol = data.frame(poi_in_pol)
+
+poi_in_pol=poi_in_pol[order(poi_in_pol[,5],-poi_in_pol[,6]),]
+
+
+
+
+aggd = aggregate(points_in_polys[,1:4],by=list(points_in_polys[,7]),FUN=sum)
+
+
+aggd = aggregate(points_in_polys[,1:4],by=list(points_in_polys[,7]),FUN=sum)
+aggd = cbind(aggd,summary(empircal$SPECIES))
+colnames(aggd)[ncol(aggd)] = "TOTAL"
+aggd = aggd[,2:ncol(aggd)]
+
+# for (i in 1:length(sort(unique(empircal$SPECIES)))) {
+#   category = sort(unique(empircal$SPECIES))[i]
+#   d = empircal[empircal$SPECIES==category,1:7]
+#   colors=c("darkred","darkorange","goldenrod",
+#            "black","brown","darkblue","darkgreen","darkcyan",
+#            "darkmagenta","darkslategrey")
+#   car::ellipse(center = colMeans(d[,6:7],na.rm = T), 
+#                shape = cov(d[,6:7],use="pairwise.complete.obs"),
+#                center.pch=i,center.cex=2,lwd=2,
+#                radius = sqrt(qchisq(.5, df=2)),col = colors[i],
+#                lty=3)
+# }
+
+## now plot pca with respect to empircal vs simulation
+
+png("/Users/kprovost/Dropbox (AMNH)/Dissertation/simulations_vs_empirical.png",
+    width=500,height=500)
+plot(withpcat$PC1,withpcat$PC2,type="n")
+points(sims$PC1,sims$PC2,col="lightgrey",pch=as.numeric(as.factor(sims$TREATMENT)))
+points(empircal$PC1,empircal$PC2,col="darkgrey",pch=as.numeric(as.factor(empircal$SPECIES)))
+for (i in 1:length(sort(unique(empircal$SPECIES)))) {
+  category = sort(unique(empircal$SPECIES))[i]
+  d = empircal[empircal$SPECIES==category,1:7]
+  colors=c("darkred","darkorange","goldenrod",
+           "black","brown","darkblue","darkgreen","darkcyan",
+           "darkmagenta","darkslategrey")
+  car::ellipse(center = colMeans(d[,6:7],na.rm = T), 
+               shape = cov(d[,6:7],use="pairwise.complete.obs"),
+               center.pch=i,center.cex=2,lwd=2,
+               radius = sqrt(qchisq(.5, df=2)),col = colors[i],
+               lty=3)
+}
+for (i in 1:length(sort(unique(sims$TREATMENT)))) {
+  category = sort(unique(sims$TREATMENT))[i]
+  d = sims[sims$TREATMENT==category,1:7]
+  colors=c(rep("red",4),
+           rep("orange",4),
+           rep("yellow",4),
+           rep("green",4),
+           rep("blue",4),
+           rep("cyan",4),
+           rep("magenta",4),
+           rep("purple",4))
+  car::ellipse(center = colMeans(d[,6:7],na.rm = T), 
+               shape = cov(d[,6:7],use="pairwise.complete.obs"),
+               center.pch=ceiling(i/4),center.cex=2,lwd=2,
+               radius = sqrt(qchisq(.5, df=2)),col = colors[i],
+               lty=2)
+}
+dev.off()
+
 ## make a pca plot of the sumstats! 
 
 {

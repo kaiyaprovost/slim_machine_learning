@@ -1,8 +1,12 @@
 library(gtools)
 
-## import popgenome
 doPopgenome = TRUE
+doSumstat = FALSE
+doSmallMerge = FALSE 
+doMerges = FALSE
+doTrimmed = FALSE
 
+## import popgenome
 if (doPopgenome==TRUE) {
   
   pathlist = c(
@@ -16,7 +20,7 @@ if (doPopgenome==TRUE) {
     #"/home/kprovost/nas2/convert_vcf_to_temp/MELANURA/",
     #"/home/kprovost/nas2/convert_vcf_to_temp/NITENS/",
     #"/home/kprovost/nas2/convert_vcf_to_temp/SINUATUS/"
-   "/home/kprovost/nas2/convert_vcf_to_temp/" 
+   "/home/kprovost/nas2/Analysis_SLiM/" 
   )
   
   for (path in pathlist) {
@@ -73,8 +77,6 @@ if (doPopgenome==TRUE) {
   
 }
 ## import sumstats
-doSumstat = FALSE
-
 if (doSumstat == TRUE) {
   
   pathlist=c("/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/120000/MODEL8/",
@@ -244,9 +246,6 @@ if (doSumstat == TRUE) {
   
 }
 ## merge popgenome and sumstats
-
-doSmallMerge = FALSE 
-
 if (doSmallMerge == TRUE) {
   
   pathlist = c("/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS_testing/TESTING/")
@@ -359,9 +358,6 @@ if (doSmallMerge == TRUE) {
     # 
   }
 }
-
-doMerges = FALSE
-
 if (doMerges == TRUE) {
   
   print("reading!")
@@ -390,8 +386,7 @@ if (doMerges == TRUE) {
   write.table(csv3,"/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/MERGEDCOMBO_3.txt",append=T,row.names=F)
   
 }
-
-####
+if (doTrimmed==TRUE) {
 
 print("trimming")
 #trimmed = read.csv("/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS_testing/MERGEDPOP_TOGETHER.txt",
@@ -511,4 +506,4 @@ write.table(gfyes.6[,c(-1:-5)],"DEM-IBD-AGE_COMBINED_GF-YES-6K.COMBO.STATS",col.
 write.table(gfno.6[,c(-1:-5)],"DEM-IBD-AGE_COMBINED_GF-NO-6K.COMBO.STATS",col.names=F,row.names=F,append=T)
 write.table(secyes.6[,c(-1:-5)],"DEM-IBD-AGE_COMBINED_SEC-YES-6K.COMBO.STATS",col.names=F,row.names=F,append=T)
 write.table(secno.6[,c(-1:-5)],"DEM-IBD-AGE_COMBINED_SEC-NO-6K.COMBO.STATS",col.names=F,row.names=F,append=T)
-
+}
