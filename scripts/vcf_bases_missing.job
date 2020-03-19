@@ -1,0 +1,33 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=99999:00:00
+#PBS -N vcf_bases_missing
+#PBS -j oe
+#PBS -m ae
+#PBS -M kprovost@amnh.org
+#PBS -k oe
+
+# change to the working directory
+#cd $PBS_O_WORKDIR
+#echo "pbsworkdir"
+#echo $PBS_O_WORKDIR
+#EXECDIR=`pwd`
+#export PATH=./:$PATH
+#echo $PATH
+
+## arguments
+## filename
+
+missing=0.5
+
+for vcfgz in /home/kprovost/nas5/slim_osg/working/*vcf.gz; do
+vcf=${vcf%.gz}
+gunzip -f $vcfgz
+
+python3 ./add_bases_data_to_vcf.py $vcf
+withbases="{$vcf}_bases.vcf"
+python3 ./add_missing_data_to_vcf.py $vcf $missing
+python3 ./add_missing_data_to_vcf.py $withbases $missing
+
+gzip -f ${vcf}*
+done

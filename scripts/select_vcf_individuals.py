@@ -25,14 +25,14 @@ except:
 	print("\nNo/improper sample number given, defaulting to 20")
 	numtosample=20
 	
-try:
-	locsfile = (sys.argv[3])
-	print("\nRead the following locs file:")
-	print(locsfile)
-except:
-	print("\nNo locs file given, quitting")
-	sys.exit()
-	locsfile="/Users/kprovost/Documents/folder_for_popgenome/modelnuc.locs"
+# try:
+# 	locsfile = (sys.argv[3])
+# 	print("\nRead the following locs file:")
+# 	print(locsfile)
+# except:
+# 	print("\nNo locs file given, quitting")
+# 	sys.exit()
+# 	#locsfile="/Users/kprovost/Documents/folder_for_popgenome/modelnuc.locs"
 
 ## read in the file 
 with open(fullvcffile,"r") as filename:
@@ -73,18 +73,18 @@ topickpop1 = np.random.choice(a=numperpop,size=numtosampleperpop,replace=False)
 topickpop2 = numperpop+np.random.choice(a=numperpop,size=numtosampleperpop,replace=False)
 ## this is the number of individual, not the name
 
-"SUBSETTING LOCS"
-## get the locations and extract metadata
-with open(locsfile,"r") as locname:
-	locs = locname.readlines()
-
-locheader=locs[1]
-locdata=locs[2:]
-
-## subset the individual locations
-topickpopall = np.ndarray.tolist(topickpop1)+ np.ndarray.tolist(topickpop2)
-topickpopall.sort()
-subsetlocs = [locdata[j] for j in topickpopall]
+# "SUBSETTING LOCS"
+# ## get the locations and extract metadata
+# with open(locsfile,"r") as locname:
+# 	locs = locname.readlines()
+# 
+# locheader=locs[1]
+# locdata=locs[2:]
+# 
+# ## subset the individual locations
+# topickpopall = np.ndarray.tolist(topickpop1)+ np.ndarray.tolist(topickpop2)
+# topickpopall.sort()
+# subsetlocs = [locdata[j] for j in topickpopall]
 
 "SUBSETTING GENOMES"
 ## process each line and only subset inds that are selected
