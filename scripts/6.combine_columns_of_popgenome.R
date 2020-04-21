@@ -1,4 +1,5 @@
 library(gtools)
+library(R.utils)
 
 doPopgenome = TRUE
 doSumstat = FALSE
@@ -20,14 +21,15 @@ if (doPopgenome==TRUE) {
     #"/home/kprovost/nas2/convert_vcf_to_temp/MELANURA/",
     #"/home/kprovost/nas2/convert_vcf_to_temp/NITENS/",
     #"/home/kprovost/nas2/convert_vcf_to_temp/SINUATUS/"
-   "/home/kprovost/nas2/Analysis_SLiM/" 
+    "/home/kprovost/nas5/slim_osg/stats/" 
+    #"/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER2_GENOMES/ANALYSIS/called_geno/SPECIES/STATS/"
   )
   
   for (path in pathlist) {
     print(path)
     setwd(path)
     #files = list.files(pattern = "MERGED_empirical.txt", recursive = T,full.names = T)
-    files = list.files(pattern = "STAT", recursive = T,full.names = T)
+    files = list.files(pattern = "STATS.txt", recursive = T,full.names = T)
     files = sample(files)
     print(length(files))
     
@@ -65,6 +67,9 @@ if (doPopgenome==TRUE) {
           }
           
         }
+        
+        gzip(filename)
+        
       }
       
       print("OUTPUTTING")

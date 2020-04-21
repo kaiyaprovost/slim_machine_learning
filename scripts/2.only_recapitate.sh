@@ -8,11 +8,19 @@
 #PBS -k oe
 
 source activate py36
-cd  "/home/kprovost/nas2/Analysis_SLiM/"
+#cd  "/home/kprovost/nas2/Analysis_SLiM/"
+cd  "/home/kprovost/nas5/slim_osg/subdirectory/"
 
-#for f in *-?.trees; do
+#export TMPDIR=/home/kprovost/nas2/tempfiles/
+export TMPDIR=/home/kprovost/nas5/tempfiles/
 
-for f in migrate-0.1-popsize-200000-mut-2.21e-9-gen-000000-recom-1e-8-ibd-1-seccon-0-pop-2-1582230455-1*trees; do
+for fgz in *trees.gz; do
+
+gunzip -f $fgz;
+
+for f in *-?.trees; do
+
+#for f in migrate-0.0-popsize-100000-mut-2.21e-10-gen-1000000-recom-1e-7-ibd-0-seccon-1-pop-2-1582702263-1.trees*trees; do
 #filename=`echo $f | cut -f1 -d'-'`
 #TIMESTAMP=`echo $f | cut -f2 -d'-'`
 #suffix=`echo $f | cut -f3 -d'-'`
@@ -37,7 +45,7 @@ else
 
 echo "$filename-$TIMESTAMP-$i-recap.trees not found."
 
-command="python '''/home/kprovost/nas2/Analysis_SLiM/Overlaying_neutral_mutations_AND_recapitate_klp.py''' \
+command="python3 '''/home/kprovost/nas2/Analysis_SLiM/Overlaying_neutral_mutations_AND_recapitate_klp.py''' \
 $f \
 $mu \
 $TIMESTAMP \
@@ -56,14 +64,14 @@ echo "done"
 
 fi
 
-echo "
-moving"
+# echo "
+# moving"
 
-gzip -f $filename-$TIMESTAMP-$i-recap*trees
+# gzip -f $filename-$TIMESTAMP-$i-recap*trees
 gzip -f $f 
 
-mv $f.gz /home/kprovost/nas2/Analysis_SLiM/TREES/
-mv *recap*trees.gz /home/kprovost/nas2/Analysis_SLiM/RECAPTREES/
+# mv $f.gz /home/kprovost/nas2/Analysis_SLiM/TREES/
+# mv *recap*trees.gz /home/kprovost/nas2/Analysis_SLiM/RECAPTREES/
 
 
 #mv $filename-$TIMESTAMP-$i-recap.trees* "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/RECAP/"
@@ -71,16 +79,16 @@ mv *recap*trees.gz /home/kprovost/nas2/Analysis_SLiM/RECAPTREES/
 #mv *png* "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/PNGS/"
 #mv $filename-$TIMESTAMP-$i-recap.vcf "/home/kprovost/nas2/Analysis_SLiM/FINISHED/VCFS/"
 
-done
+done;
 
-mv /home/kprovost/nas2/Analysis_SLiM/*vcf /home/kprovost/nas2/Analysis_SLiM/VCF*/
-mv /home/kprovost/nas2/Analysis_SLiM/*log* /home/kprovost/nas2/Analysis_SLiM/LOG*/
-mv /home/kprovost/nas2/Analysis_SLiM/*loc* /home/kprovost/nas2/Analysis_SLiM/LOC*/
-mv /home/kprovost/nas2/Analysis_SLiM/*header* /home/kprovost/nas2/Analysis_SLiM/HEAD*/
+# mv /home/kprovost/nas2/Analysis_SLiM/*vcf /home/kprovost/nas2/Analysis_SLiM/VCF*/
+# mv /home/kprovost/nas2/Analysis_SLiM/*log* /home/kprovost/nas2/Analysis_SLiM/LOG*/
+# mv /home/kprovost/nas2/Analysis_SLiM/*loc* /home/kprovost/nas2/Analysis_SLiM/LOC*/
+# mv /home/kprovost/nas2/Analysis_SLiM/*header* /home/kprovost/nas2/Analysis_SLiM/HEAD*/
 
 
 #echo "
-
+done; 
 ## starting to zip recap"
 
 #cd "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TREES/RECAP/"
