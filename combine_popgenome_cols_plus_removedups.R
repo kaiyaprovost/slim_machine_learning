@@ -1,5 +1,31 @@
 setwd("/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER2_GENOMES/ANALYSIS/called_geno/")
 
+
+filelist=c("MERGEDPOP.txt","MERGEDPOP_6-DONE.txt","MERGEDPOP_5-DONE.txt",
+           "MERGEDPOP_4-DONE.txt","MERGEDPOP_3-DONE.txt","MERGEDPOP_3_new_sims.txt",
+           "MERGEDPOP_2-DONE.txt","MERGEDPOP_2_new_sims.txt","MERGEDPOP copy.txt","MERGEDCOMBO trim.txt",
+           "MERGED_empirical_wide.txt","all_merged_8_april_2020.txt","all_merged_8_april_2020_2.txt")
+
+
+
+mergedf=NULL
+for(file in newstats){
+  df=read.table(file,sep="\t",header=T,stringsAsFactors=F)
+  if(is.null(mergedf)){
+    mergedf=df
+  } else {
+    mergedf=merge(mergedf,df,all=T)
+  }
+}
+
+
+
+
+
+
+
+
+
 f1="alldf_trim.temp.txt"
 f2="alldf_trim.txt"
 f3="alldf.txt"
