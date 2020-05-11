@@ -29,7 +29,7 @@ if (doPopgenome==TRUE) {
     print(path)
     setwd(path)
     #files = list.files(pattern = "MERGED_empirical.txt", recursive = T,full.names = T)
-    files = list.files(pattern = "STATS.txt", recursive = T,full.names = T)
+    files = list.files(pattern = "STATS.txt", recursive = F,full.names = T)
     files = sample(files)
     print(length(files))
     
@@ -81,6 +81,7 @@ if (doPopgenome==TRUE) {
   }
   
 }
+
 ## import sumstats
 if (doSumstat == TRUE) {
   
@@ -137,6 +138,7 @@ if (doSumstat == TRUE) {
         #for (f in 1:5) {
         #for (f in 1:length(files)) {
         filename = files[f]
+        print(filename)
         splitname = strsplit(filename,"\\.")[[1]][1]
         onlyname = strsplit(splitname,"_")[[1]]
         finalsplit = strsplit(onlyname[3],"-")[[1]]
