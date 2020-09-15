@@ -29,7 +29,7 @@ if (doPopgenome==TRUE) {
     print(path)
     setwd(path)
     #files = list.files(pattern = "MERGED_empirical.txt", recursive = T,full.names = T)
-    files = list.files(pattern = "STATS.txt", recursive = F,full.names = T)
+    files = list.files(pattern = "STATS.*.txt", recursive = F,full.names = T)
     files = sample(files)
     print(length(files))
     
