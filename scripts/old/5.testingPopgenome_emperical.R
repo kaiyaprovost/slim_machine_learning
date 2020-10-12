@@ -29,8 +29,10 @@ for (p in packages) {
 #path = "/Users/kprovost/Dropbox (AMNH)/Classes/Machine_Learning/SLiMTreeSeqPub-master/models_to_run/spatial/"
 #path = "/Users/kprovost/Dropbox (AMNH)/Classes/Machine_Learning/SLiMTreeSeqPub-master/models_to_run/demography/"
 #path = "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/all_done/TEMPFILES/WITH_HEADER/"
-path = "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER2_GENOMES/ANALYSIS/called_geno/Amphispiza-bilineata-called.geno/"
+#path = "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER2_GENOMES/ANALYSIS/called_geno/Amphispiza-bilineata-called.geno/"
 #path = "/home/kprovost/nas2/Analysis_SLiM/FINISHED/TEMPS/SUBSET/"
+
+path="/Users/kprovost/Dropbox (AMNH)/CFB_review_J_Biogeo/"
 
 # locs = "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/all_done/NE1000/LOCS/SUBSET/model3_isolation_6k-1558189269-53.subsetlocs"
 # subset = "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/all_done/NE1000/TEMPS/SUBSET/DONE/model3_isolation_6k-1558189269-53.withheader.subsettemp"
@@ -53,8 +55,9 @@ path = "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER2_GENOMES/ANALYSIS/ca
 
 setwd(path)
 
-files = list.files(pattern = "Amphispiza-bilineata-called.geno.NW_005087129.1.fulltemp", recursive = TRUE)
+#files = list.files(pattern = "Amphispiza-bilineata-called.geno.NW_005087129.1.fulltemp", recursive = TRUE)
 #files = list.files(pattern = "subsettemp$", recursive = FALSE)
+files = list.files(pattern = "TESTING.*generated.*vcf$", recursive = FALSE)
 myfiles = files
 
 #myfiles = "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/TEMPS/SUBSET/model1_panmixia_6k-1558965538-1.withheader.subsettemp"
@@ -70,7 +73,7 @@ length(myfiles)
 
 ## make this a for loop
 
-do_vcf = F
+do_vcf = T
 overwrite = T
 
 if (do_vcf == F) {

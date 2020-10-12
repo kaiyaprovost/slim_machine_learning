@@ -27,12 +27,15 @@ for (p in packages) {
 #do_vcf = T
 
 ## the way to get around needing a directory is probably to create a temporary directory, copy the file into it, run analyses, and then empty the directory
-
-path=getwd()
+path="/Users/kprovost/Dropbox (AMNH)/CFB_review_J_Biogeo"
+#path=getwd()
 for (path in path) {
   print(path)
   setwd(path)
-  files = list.files(pattern = "vcf$")
+  #files = list.files(pattern = "vcf$")
+  files = list.files(pattern = "Lampropeltis.*vcf$")
+  files = files[!grepl("generated",files)]
+  
   x <- file.info(files)
   files <- files[order(x$size)]
   

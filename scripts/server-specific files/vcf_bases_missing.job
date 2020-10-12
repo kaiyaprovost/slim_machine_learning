@@ -20,7 +20,7 @@
 
 missing=0.5
 
-for vcfgz in /home/kprovost/nas5/slim_osg/working/*vcf.gz; do
+for vcfgz in /home/kprovost/nas5/slim_osg/subdirectory/*vcf.gz; do
 vcf=${vcf%.gz}
 gunzip -f $vcfgz
 

@@ -1,8 +1,8 @@
 library(gtools)
 library(R.utils)
 
-doPopgenome = TRUE
-doSumstat = FALSE
+doPopgenome = FALSE
+doSumstat = TRUE
 doSmallMerge = FALSE 
 doMerges = FALSE
 doTrimmed = FALSE
@@ -11,72 +11,82 @@ doTrimmed = FALSE
 if (doPopgenome==TRUE) {
   
   pathlist = c(
-    #"/home/kprovost/nas2/convert_vcf_to_temp/BELLII/",
-    #"/home/kprovost/nas2/convert_vcf_to_temp/BRUNNEICAPILLUS/",
-    #"/home/kprovost/nas2/convert_vcf_to_temp/BILINEATA/",
-    #"/home/kprovost/nas2/convert_vcf_to_temp/CRISSALE/",
-    #"/home/kprovost/nas2/convert_vcf_to_temp/CURVIROSTRE/",
-    #"/home/kprovost/nas2/convert_vcf_to_temp/FUSCA/",
-    #"/home/kprovost/nas2/convert_vcf_to_temp/FLAVICEPS/",
-    #"/home/kprovost/nas2/convert_vcf_to_temp/MELANURA/",
-    #"/home/kprovost/nas2/convert_vcf_to_temp/NITENS/",
-    #"/home/kprovost/nas2/convert_vcf_to_temp/SINUATUS/"
-    "/home/kprovost/nas5/slim_osg/stats/" 
-    #"/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER2_GENOMES/ANALYSIS/called_geno/SPECIES/STATS/"
-  )
+    #"/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER2_GENOMES/ANALYSIS/called_geno/SPECIES/STATS/BELLII/"
+    "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/CFB_review_J_Biogeo/scutulatus/stats/" 
+    #"/Users/kprovost/Dropbox (AMNH)/cardinalis vcf/stats/" 
+    )
+  
   
   for (path in pathlist) {
     print(path)
     setwd(path)
-    #files = list.files(pattern = "MERGED_empirical.txt", recursive = T,full.names = T)
-    files = list.files(pattern = "STATS.*.txt", recursive = F,full.names = T)
-    files = sample(files)
+    files = c(list.files(pattern = "popgenome.stats$", recursive = F,full.names = T),
+              list.files(pattern = ".STATS$", recursive = F,full.names = T))
+    #files = list.files(pattern = "STATS.*.txt", recursive = F,full.names = T)
+    #files = sample(files)
     print(length(files))
+    print("list")
+    df_list <- lapply(files, FUN = function(x){
+      csv = data.table::fread(file = x,sep="\t",na.strings = c("NA","NaN","NAN","-100","NULL"),fill=T)
+      csv$FILE = paste(rownames(csv),basename(x),sep="-")
+      return(csv)
+    })
+    print("merge")
+    merged = plyr::rbind.fill(df_list)
+    merged = unique(merged)
     
-    blocksize = 3000
-    blocks = ceiling(length(files)/blocksize)
+    print("OUTPUTTING")
     
-    for (i in 1:blocks) {
+    write.table(merged,paste("MERGED_basics",".txt",sep=""),append=T,row.names=F)
+    
+    lapply(files,FUN=function(x){gzip(x,skip=T)})
+    
+    ## BELOW HERE IS COMMENTED OUT DUE TO BEING OLD AND CLUNKY
+    # blocksize = 300
+    # blocks = ceiling(length(files)/blocksize)
+    # 
+    # for (i in 1:blocks) {
+    #   
+    #   first = ((i-1)*blocksize+1)
+    #   last = min((i*blocksize),length(files))
+    #   print(paste("block",i,"first",first,"last",last))
+    #   ptm <- proc.time()
+    #   
+    #   
+    #   for (f in first:last) {
+    #     #for (f in 1:5) {
+    #     #for (f in 1:length(files)) {
+    #     if (f %% 100 == 0) {
+    #       print(f)
+    #       #print(colnames(merged))
+    #     }
+    #     filename = files[f]
+    #     #print(filename)
+    #     #csv = read.csv(filename,sep="\t",na.strings = c("NA","NaN","NAN","-100","NULL"))
+    #     csv = data.table::fread(file = filename,sep="\t",na.strings = c("NA","NaN","NAN","-100","NULL"))
+    #     
+    #     csv$FILE = paste(rownames(csv),basename(filename),sep="-")
+    #     
+    #     if (nrow(csv) > 0) {
+    #       
+    #       if (f==1) {
+    #         merged = csv
+    #       } else if (f==first) {
+    #         merged = plyr::rbind.fill(merged[1,],csv)
+    #       } else {
+    #         merged = plyr::rbind.fill(merged,csv)
+    #       }
+    #       
+    #     }
+    #     
+    #     #gzip(filename,skip=T)
+    #     
+    #   }
+    #   print(proc.time() - ptm)
       
-      first = ((i-1)*blocksize+1)
-      last = min((i*blocksize),length(files))
-      print(paste("block",i,"first",first,"last",last))
       
       
-      
-      for (f in first:last) {
-        #for (f in 1:5) {
-        #for (f in 1:length(files)) {
-        if (f %% 100 == 0) {
-          print(f)
-          #print(colnames(merged))
-        }
-        filename = files[f]
-        #print(filename)
-        csv = read.csv(filename,sep="\t")
-        csv$FILE = rownames(csv)
-        
-        if (nrow(csv) > 0) {
-          
-          if (f==1) {
-            merged = csv
-          } else if (f==first) {
-            merged = smartbind(merged[1,],csv)
-          } else {
-            merged = smartbind(merged,csv)
-          }
-          
-        }
-        
-        gzip(filename)
-        
-      }
-      
-      print("OUTPUTTING")
-      
-      write.table(merged,"MERGED_empirical_1.txt",append=T,row.names=F)
-      
-    }
+    #}
     
   }
   
@@ -85,169 +95,32 @@ if (doPopgenome==TRUE) {
 ## import sumstats
 if (doSumstat == TRUE) {
   
-  pathlist=c("/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/120000/MODEL8/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/120000/MODEL7/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/120000/MODEL6/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/120000/MODEL5/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/120000/MODEL4/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/120000/MODEL3/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/120000/MODEL2/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/120000/MODEL1/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/21000/MODEL8/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/21000/MODEL7/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/21000/MODEL6/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/21000/MODEL5/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/21000/MODEL4/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/21000/MODEL3/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/21000/MODEL2/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/21000/MODEL1/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/6000/MODEL8/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/6000/MODEL7/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/6000/MODEL6/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/6000/MODEL5/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/6000/MODEL4/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/6000/MODEL3/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/6000/MODEL2/",
-             "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/6000/MODEL1/"
-  )
+  pathlist=c("/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/CFB_review_J_Biogeo/scutulatus/stats/" )
+  
   
   for (path in pathlist) {
     
     print(path)
     
     setwd(path)
-    files = list.files(pattern = "*subset.stats$", recursive = TRUE)
-    files = sample(files)
+    files = list.files(pattern = "*sumstats.stats$", recursive = TRUE,full.names=T)
+        print(length(files))
+    print("list")
+    df_list <- lapply(files[1:41], FUN = function(x){
+      csv = data.table::fread(file = x,sep=" ",na.strings = c("NA","NaN","NAN","-100","NULL"),fill=T)
+      csv$FILE = paste(rownames(csv),basename(x),sep="-")
+      return(csv)
+    })
+    print("merge")
+    merged = plyr::rbind.fill(df_list)
+    merged = unique(merged)
     
-    blocksize = 1200 
-    blocks = ceiling(length(files)/blocksize)
+    print("OUTPUTTING")
     
-    for (i in 1:blocks) {
-      
-      first = ((i-1)*blocksize+1)
-      last = min((i*blocksize),length(files))
-      print(paste("block",i,"first",first,"last",last))
-      
-      
-      #for (f in 1:5) {
-      for (f in first:last) {
-        if (f %% 100 == 0) {
-          print(f)
-          #print(colnames(merged))
-        }
-        #for (f in 1:5) {
-        #for (f in 1:length(files)) {
-        filename = files[f]
-        print(filename)
-        splitname = strsplit(filename,"\\.")[[1]][1]
-        onlyname = strsplit(splitname,"_")[[1]]
-        finalsplit = strsplit(onlyname[3],"-")[[1]]
-        year = finalsplit[1]
-        demog = onlyname[2]
-        run = splitname
-        #run2 = substr(run,1,35)
-        #run = strsplit(run2,"\\.")[[1]][1]
-        numrun = as.numeric(substr(run,6,6))
-        ibd = !(numrun %% 2)
-        
-        meta = c(year,demog,run,numrun,ibd)
-        metanames = c("year","demog","run","numrun","ibd")
-        names(meta) = metanames
-        meta = t(as.data.frame(meta))
-        
-        csv = read.csv(filename,sep="\t",header=F)
-        
-        if (nrow(csv) > 0) {
-          
-          col_headers = unlist(as.list(csv[1,c(1,3,5,7,9)]))
-          col_data = csv[,c(2,4,6,8,10)]
-          
-          colnames(col_data) = col_headers
-          col_data
-          
-          col_data = cbind(meta,col_data)
-          
-          
-          if (f==first) {
-            merged = col_data
-          } else {
-            merged = smartbind(merged,col_data)
-          }
-          
-        }
-      }
-      
-      print("OUTPUTTING")
-      
-      write.table(merged,"MERGEDSUMSTAT.txt",append=T,row.names = F)
-      
-      ibdyes = merged[merged$ibd==TRUE,]
-      ibdno = merged[merged$ibd==FALSE,]
-      
-      panyes = ibdyes[ibdyes$demog=="PAN",]
-      panno = ibdno[ibdyes$demog=="PAN",]
-      isoyes = ibdyes[ibdyes$demog=="ISO",]
-      isono = ibdno[ibdyes$demog=="ISO",]
-      gfyes = ibdyes[ibdyes$demog=="GF",]
-      gfno = ibdno[ibdyes$demog=="GF",]
-      secyes = ibdyes[ibdyes$demog=="SEC",]
-      secno = ibdno[ibdyes$demog=="SEC",]
-      
-      panyes.120 = panyes[panyes$year=="120k",]
-      panno.120 = panno[panno$year=="120k",]
-      isoyes.120 = isoyes[isoyes$year=="120k",]
-      isono.120 = isono[isono$year=="120k",]
-      gfyes.120 = gfyes[gfyes$year=="120k",]
-      gfno.120 = gfno[gfno$year=="120k",]
-      secyes.120 = secyes[secyes$year=="120k",]
-      secno.120 = secno[secno$year=="120k",]
-      
-      panyes.21 = panyes[panyes$year=="21k",]
-      panno.21 = panno[panno$year=="21k",]
-      isoyes.21 = isoyes[isoyes$year=="21k",]
-      isono.21 = isono[isono$year=="21k",]
-      gfyes.21 = gfyes[gfyes$year=="21k",]
-      gfno.21 = gfno[gfno$year=="21k",]
-      secyes.21 = secyes[secyes$year=="21k",]
-      secno.21 = secno[secno$year=="21k",]
-      
-      panyes.6 = panyes[panyes$year=="6k",]
-      panno.6 = panno[panno$year=="6k",]
-      isoyes.6 = isoyes[isoyes$year=="6k",]
-      isono.6 = isono[isono$year=="6k",]
-      gfyes.6 = gfyes[gfyes$year=="6k",]
-      gfno.6 = gfno[gfno$year=="6k",]
-      secyes.6 = secyes[secyes$year=="6k",]
-      secno.6 = secno[secno$year=="6k",]
-      
-      write.table(panyes.120,"MERGEDSUMSTAT_panyes.120.txt",append=T,row.names=F)
-      write.table(panno.120,"MERGEDSUMSTAT_panno.120.txt",append=T,row.names=F)
-      write.table(isoyes.120,"MERGEDSUMSTAT_isoyes.120.txt",append=T,row.names=F)
-      write.table(isono.120,"MERGEDSUMSTAT_isono.120.txt",append=T,row.names=F)
-      write.table(gfyes.120,"MERGEDSUMSTAT_gfyes.120.txt",append=T,row.names=F)
-      write.table(gfno.120,"MERGEDSUMSTAT_gfno.120.txt",append=T,row.names=F)
-      write.table(secyes.120,"MERGEDSUMSTAT_secyes.120.txt",append=T,row.names=F)
-      write.table(secno.120,"MERGEDSUMSTAT_secno.120.txt",append=T,row.names=F)
-      
-      write.table(panyes.21,"MERGEDSUMSTAT_panyes.21.txt",append=T,row.names=F)
-      write.table(panno.21,"MERGEDSUMSTAT_panno.21.txt",append=T,row.names=F)
-      write.table(isoyes.21,"MERGEDSUMSTAT_isoyes.21.txt",append=T,row.names=F)
-      write.table(isono.21,"MERGEDSUMSTAT_isono.21.txt",append=T,row.names=F)
-      write.table(gfyes.21,"MERGEDSUMSTAT_gfyes.21.txt",append=T,row.names=F)
-      write.table(gfno.21,"MERGEDSUMSTAT_gfno.21.txt",append=T,row.names=F)
-      write.table(secyes.21,"MERGEDSUMSTAT_secyes.21.txt",append=T,row.names=F)
-      write.table(secno.21,"MERGEDSUMSTAT_secno.21.txt",append=T,row.names=F)
-      
-      write.table(panyes.6,"MERGEDSUMSTAT_panyes.6.txt",append=T,row.names=F)
-      write.table(panno.6,"MERGEDSUMSTAT_panno.6.txt",append=T,row.names=F)
-      write.table(isoyes.6,"MERGEDSUMSTAT_isoyes.6.txt",append=T,row.names=F)
-      write.table(isono.6,"MERGEDSUMSTAT_isono.6.txt",append=T,row.names=F)
-      write.table(gfyes.6,"MERGEDSUMSTAT_gfyes.6.txt",append=T,row.names=F)
-      write.table(gfno.6,"MERGEDSUMSTAT_gfno.6.txt",append=T,row.names=F)
-      write.table(secyes.6,"MERGEDSUMSTAT_secyes.6.txt",append=T,row.names=F)
-      write.table(secno.6,"MERGEDSUMSTAT_secno.6.txt",append=T,row.names=F)
-      
-    }
+    write.table(merged,paste("MERGED_basics_sumstats",".txt",sep=""),append=T,row.names=F)
+    
+    print("zips")
+    lapply(files,FUN=function(x){gzip(x,skip=T)})
     
   }
   

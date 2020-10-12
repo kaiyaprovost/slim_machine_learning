@@ -48,17 +48,17 @@ echo " " >> $namefull.subset.sumstats.stats
 echo	
 fi	
 
-gzip -f ${namefull}.subset.sumstats.stats
+#gzip -f ${namefull}.subset.sumstats.stats
 
-mv $f "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/TEMPS/SUBSET/"
-mv ${name}.subset.stats "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/"
-mv ${namefull}.subset.sumstats.stats* "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/FULLSUMSTAT/"
+#mv $f "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/TEMPS/SUBSET/"
+#mv ${name}.subset.stats "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/SUMSTAT/"
+#mv ${namefull}.subset.sumstats.stats* "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/FULLSUMSTAT/"
 
 done 
 
-echo "
-
-starting to zip fullsumstat"
-
-cd "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/FULLSUMSTAT/"
-for i in *stats; do echo "zipping ${i}"; gzip -f $i; done;
+#echo "
+#
+#starting to zip fullsumstat"
+#
+#cd "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS/FULLSUMSTAT/"
+#for i in *stats; do echo "zipping ${i}"; gzip -f $i; done;
