@@ -1,0 +1,38 @@
+universe     = vanilla 
+
+requirements = OSGVO_OS_STRING == "RHEL 7" && Arch == "X86_64" && HAS_MODULES == True 
+request_cpus = 1 
+request_memory = 100 MB 
+request_disk = 1 GB 
+
+#Resubmit job if exit code of executable is =/= 0
+max_retries = 5
+
+#Remove jobs that have been running for longer than 60 secs
+#periodic_remove = (JobStatus == 2) && ( (CurrentTime - EnteredCurrentStatus) > 60 )
+
+executable = slim_run_osg.job
+
+arguments = $(M) $(N) $(m) $(O) $(i) $(v) $(B) $(r) $(f) $(G) $(g) $(H) $(h) $(w)
+
+transfer_input_files = slim, 0.twopopulations_variable_parameters.slim, vireotest_slim_TRANSITION_57x87_coarse.txt, 1.run_slim_2pop_recpacitate.sh
+transfer_output_files = subdirectory
+
+output = $(Cluster).$(Process).out 
+error = $(Cluster).$(Process).err 
+log = $(Cluster).$(Process).log 
+
+should_transfer_files = YES 
+when_to_transfer_output = ON_EXIT 
+
+notification = Error
+notify_user = kprovost@amnh.org
+
++ProjectName = "AMNH" 
+
+#Submit one job per number in parentheisis and assign the number to the variable fib.
+#If you wish to queue multiple jobs per variable then change the number after queue
+
+queue 1 M,N,m,O,i,v,B,r,f,G,g,H,h,w from slim_models_osg_params_growthselection.txt
+
+

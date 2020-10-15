@@ -3,38 +3,87 @@
 
 import numpy as np ## 
 import pandas as pd ## 
+import copy
 
 from sklearn.model_selection import GridSearchCV ## 
 from sklearn.model_selection import ParameterGrid ## 
 from sklearn.multioutput import MultiOutputClassifier ## 
 from sklearn.neural_network import MLPClassifier ## 
+from sklearn.metrics import classification_report ## 
+
 
 import slim_model_selection_data_processing as sms_pre
 
-def makeSimpleNN(X_train,Y_train,item=None):
+def makeSimpleNN(X_train,Y_train,item=None,n_jobs=-1):
 	print("\tSimple NN")
 	clf = MLPClassifier() 
 	
 	if item != None:
 		clf.set_params(**item)
-	clf = MultiOutputClassifier(clf,n_jobs=-1) ## if you turn this off it splits the data 50/50 
+	clf = MultiOutputClassifier(clf,n_jobs=n_jobs) ## if you turn this off it splits the data 50/50 
 	clf = clf.fit(X_train, Y_train) 
 	#print(clf.get_params())
 	
 	return(clf)
 
-def makeGridCVNN(X_train,Y_train,param_grid):
+def makeGridCVNN(X_train,Y_train,param_grid,X_test,Y_test,n_jobs=-1,scores=["f1"]):
 	print("\tGrid Search NN")
 	print("Fitting the following parameters:")
 	print(param_grid,end="\n")
-	clf = MLPClassifier() ## bring to developers? or check with RF? 
+	#clf = MLPClassifier() ## bring to developers? or check with RF? 
 	## see if you can use your data in R or matlab 
+	#print("\Starting parameters:")
+	#print(clf.get_params())
+
+	#scores = ["f1"]
+	#‘f1’,‘f1_micro’,‘f1_macro’,‘f1_weighted’,‘f1_samples’
 	
-	clf = GridSearchCV(clf, param_grid,refit=True) ## tweak this 
-	clf = MultiOutputClassifier(clf,n_jobs=-1) ## if you turn this off it splits the data 50/50 
-	clf = clf.fit(X_train, Y_train) 
-	print("\nBest parameters:")
-	print(clf.get_params())
+	for score in scores:
+		print("# Tuning hyper-parameters for %s" % score)
+		print()
+		clf = GridSearchCV(
+			MLPClassifier(), param_grid, n_jobs=n_jobs,scoring='%s_macro' % score
+		)
+		print("fitting")
+		clf=MultiOutputClassifier(clf)
+		clf.fit(X_train, Y_train)
+		
+		print("Best parameters set found on development set:")
+		print()
+		#print(clf.best_params_)
+		
+		for i in range(len(clf.estimators_)):
+			print("Best estimation of "+str(i))
+			this_estimator = clf.estimators_[i]
+			print(this_estimator.best_params_)
+			print()
+			print("Grid scores on development set:")
+			print()
+			means = this_estimator.cv_results_['mean_test_score']
+			stds = this_estimator.cv_results_['std_test_score']
+			for mean, std, params in zip(means, stds, this_estimator.cv_results_['params']):
+				print("%0.3f (+/-%0.03f) for %r"
+					  % (mean, std * 2, params))
+			print()
+	
+	
+	#print("\tStart Search")
+	#clf = GridSearchCV(MLPClassifier(), param_grid,refit=True,cv=5) ## tweak this 
+	#print(clf.get_params())
+	#print("BEST")
+	#print(clf.best_params_)
+	#print("\Search parameters:")
+	#print(clf.get_params())
+	#print("\tClassifier")
+	#clf = MultiOutputClassifier(clf,n_jobs=n_jobs) ## if you turn this off it splits the data 50/50 
+	#print("\Classifier parameters:")
+	#print(clf.get_params())
+	#print("\tFitting")
+	#clf.fit(X_train, Y_train) 
+	#print("\nFitted parameters:")
+	#print(clf.get_params())
+	#print("BEST")
+	#print(clf.best_params_)
 	
 	return(clf)
 	
@@ -186,7 +235,7 @@ def manualCrossValidationParameters(param_grid,X_cv_list,Y_cv_list):
 
 		print("")
 
-		for i in range(len(X_cv_list)):    
+		for i in range(len(X_cv_list)):	
 			print("\tRep",i, end = " ")
 			## may need to do this k-fold 
 		

@@ -39,7 +39,7 @@ def inputDataFiles(filenames):
 	elif type == "SUMSTATS":
 		X = np.array([]).reshape(0,5)
 	elif type == "COMBO":
-		X = np.array([]).reshape(0,11) ## 33 or 11
+		X = np.array([]).reshape(0,33) ## 33 or 11
 	else:
 		X = np.array([]).reshape(0,0)
 

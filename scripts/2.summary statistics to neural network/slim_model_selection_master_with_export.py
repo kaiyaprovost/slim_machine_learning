@@ -14,11 +14,13 @@ import slim_model_selection_summarize_NN as sms_snn
 # cd "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/combostats_8models/NONCORRELATED"
 # programPath="/Users/kprovost/Documents/Github/slim_machine_learning/scripts/2.summary statistics to neural network/slim_model_selection_master_with_export.py"
 # echo "COMBO ALL" 2>&1 > log_pop-demography-ibd-age-colfix.temp 
-# ls DEM-IBD-AGE_*.COMBO.STATS | xargs -t python3 "${programPath}" >> log_pop-demography-ibd-age-colfix.temp 2>&1
+# ls DEM-IBD-AGE_*1000*.COMBO.STATS | xargs -t python3 "${programPath}" >> log_pop-demography-ibd-age-colfix_smallshort.temp 2>&1
 
 def main():
 
 	## consider making the outputs of each of these modules a class instead?
+	
+	current_time=int(time.time())
 	
 	print("\n------------------------------------\nSTART DATA PROCESSING MODULE\n------------------------------------")
 
@@ -26,14 +28,18 @@ def main():
 	
 	[X,Y,numcategories,classOrderLs,outputString] = sms_pre.inputDataFiles(filenames)
 	
+	suffix1="*"
+	suffix2="*NN"
+	suffix=suffix1+suffix2
+	
 	[X_train,X_test,X_validate,X_cv_list,Y_train,Y_test,Y_validate,Y_cv_list] = sms_pre.manualTrainTestSplit(X,Y,N=10)
 	
-	sms_pre.outputXYdatasets(dataset=X_train,writename="X_train.temp")
-	sms_pre.outputXYdatasets(dataset=X_validate,writename="X_validate.temp")
-	sms_pre.outputXYdatasets(dataset=X_test,writename="X_test.temp")
-	sms_pre.outputXYdatasets(dataset=Y_train,writename="Y_train.temp")
-	sms_pre.outputXYdatasets(dataset=Y_validate,writename="Y_validate.temp")
-	sms_pre.outputXYdatasets(dataset=Y_test,writename="Y_test.temp")
+	sms_pre.outputXYdatasets(dataset=X_train,writename="X_train."+str(suffix)+"_"+str(current_time)+".temp")
+	sms_pre.outputXYdatasets(dataset=X_validate,writename="X_validate."+str(suffix)+"_"+str(current_time)+".temp")
+	sms_pre.outputXYdatasets(dataset=X_test,writename="X_test."+str(suffix)+"_"+str(current_time)+".temp")
+	sms_pre.outputXYdatasets(dataset=Y_train,writename="Y_train."+str(suffix)+"_"+str(current_time)+".temp")
+	sms_pre.outputXYdatasets(dataset=Y_validate,writename="Y_validate."+str(suffix)+"_"+str(current_time)+".temp")
+	sms_pre.outputXYdatasets(dataset=Y_test,writename="Y_test."+str(suffix)+"_"+str(current_time)+".temp")
 	
 	print("\nShapes of features:")
 	print("Full dataset X, Y")
@@ -47,9 +53,9 @@ def main():
 	
 	[X_train_scaled,X_test_scaled,X_validate_scaled] = sms_pre.featureScaling(X_train,X_test,X_validate)
 	
-	sms_pre.outputXYdatasets(dataset=X_train_scaled,writename="X_train_scaled.temp")
-	sms_pre.outputXYdatasets(dataset=X_validate_scaled,writename="X_validate_scaled.temp")
-	sms_pre.outputXYdatasets(dataset=X_test_scaled,writename="X_test_scaled.temp")
+	sms_pre.outputXYdatasets(dataset=X_train_scaled,writename="X_train_scaled."+str(suffix)+"_"+str(current_time)+".temp")
+	sms_pre.outputXYdatasets(dataset=X_validate_scaled,writename="X_validate_scaled."+str(suffix)+"_"+str(current_time)+".temp")
+	sms_pre.outputXYdatasets(dataset=X_test_scaled,writename="X_test_scaled."+str(suffix)+"_"+str(current_time)+".temp")
 	
 	print("\n---------------------------------------\nEND DATA PROCESSING MODULE\n---------------------------------------")
 	
@@ -64,12 +70,15 @@ def main():
 	print("\nOptimizing Neural Network")
 	param_grid = [
 		{
-		#'alpha': [0,0.01,0.1,1,10],
-		'alpha': [1],
-		#'activation': ['logistic'],
+		'alpha': [0,0.01,0.1,1,10], ## for 1000k, 1 and 10 are trash, and rest roughly the same. For 6k and 21k, 10 is trash, rest roughly same. 
+		#'alpha': [0,1],
+		#'estimator__alpha': [1], ## adding this is helpful when you have a clf inside a clf
+		'activation': ['logistic'],
 		#'activation': ['identity','logistic','relu','tanh'],
-		'hidden_layer_sizes': [(100,100,100)],
-		#'hidden_layer_sizes': [(5,5,5),(25,25,25),(100,100,100)],
+		#'hidden_layer_sizes': [(100),(100,100),(100,100,100)],
+		'hidden_layer_sizes': [(5,5,5),(25,25,25),(100,100,100),(5,5),(25,25),(100,100),(5),(25),(100)],
+		#'hidden_layer_sizes': [(25),(25,25),(25,25,25)],
+		#'hidden_layer_sizes': [(5),(5,5),(5,5,5)],
 		#'solver': ['sgd','lbfgs','adam'],
 		'solver': ['lbfgs'],
 		#'learning_rate': ['adaptive','constant','invscaling'],
@@ -77,7 +86,7 @@ def main():
 		#'learning_rate_init': [1e-1,1e-4,1e-7],
 		'learning_rate_init': [1e-4],
 		'shuffle': [True],
-		'verbose': [True],
+		'verbose': [False],
 		'early_stopping': [True],
 		'max_iter': [10000], ## this was 1000 before and decidedly not high enough 
 		'warm_start': [True]
@@ -85,15 +94,15 @@ def main():
 	]
 
 	#clf = sms_bnn.makeSimpleNN(X_train,Y_train)
-	clf = sms_bnn.makeGridCVNN(X_train,Y_train,param_grid)
+	clf = sms_bnn.makeGridCVNN(X_train=X_train,Y_train=Y_train,param_grid=param_grid,X_test=X_validate,Y_test=Y_validate,n_jobs=64)
 	
 	train_predicted = sms_bnn.summarizePredictScores(X_train,Y_train,clf,label="Training")
 	validate_predicted = sms_bnn.summarizePredictScores(X_validate,Y_validate,clf,label="Validation")
 	test_predicted = sms_bnn.summarizePredictScores(X_test,Y_test,clf,label="Test")
 	
 	## export clf object for later usage
-	current_time=int(time.time())
-	dump(clf,outputString+"trained_neural_network_"+str(current_time)+".joblib")
+	
+	dump(clf,outputString+"trained_neural_network_"+str(suffix)+"_"+str(current_time)+".joblib")
 	
 	print("\n---------------------------------------\nEND BUILDING NN MODULE\n---------------------------------------")
 
@@ -143,7 +152,9 @@ def main():
 	print("TN:",true_negatives)
 	print("FN:",false_negatives)
 	
-	sms_snn.outputCountsToFile(classOrderLs,df,outputString)
+	sms_snn.outputCountsToFile(classOrderLs,df,str(suffix)+"_"+str(current_time)+"_"+outputString)
+	
+	## output the weights 
 	
 	print("\n---------------------------------------\nEND SUMMARIZE NN MODULE\n---------------------------------------")
 
