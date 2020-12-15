@@ -1,14 +1,15 @@
 #!/bin/bash
 
-cd "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/all_done/actual_scaled_runs"
-for vcffirst in model2*vcf.gz; do 
+cd ~/Dropbox\ \(AMNH\)/Dissertation/CHAPTER1_REVIEW/CFB_review_J_Biogeo/snake_fasta_files/Pituophis_vcf/
+#for vcffirst in model2*vcf.gz; do 
 #vcffile=${vcffirst#./VCFS/}
-vcffile=${vcffirst%.gz}
-gunzip -f $vcffirst
+#vcffile=${vcffirst%.gz}
+#gunzip -f $vcffirst
+for vcffile in *vcf; do
 echo $vcffile
 prefix=${vcffile%.vcf}
 fulltempfile=${prefix}.fulltemp
-numtosample=20
+numtosample=36 ## atrox 34, getula 26, pituophis 36
 #!/bin/bash
 if [ -f "$fulltempfile" ]
 then

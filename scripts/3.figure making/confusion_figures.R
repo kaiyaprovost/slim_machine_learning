@@ -795,13 +795,16 @@ kALL = x[x$year=="ALLK",]
 
 colors = RColorBrewer::brewer.pal(12, "Paired")
 
-png("/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/combostats_8models/model_misclassification_figures_noall.png",
-    height = 300,width = 900,pointsize=24)
-
+#png("/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/combostats_8models/model_misclassification_figures_noall.png",
+#    height = 300,width = 900,pointsize=24)
+pdf("/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/combostats_8models/model_misclassification_figures_noall.pdf",
+    height=2,width=7)
 par(mfrow=c(1,3),mar=c(4,4,1,1))
 
 plot(k6$modelnum,k6$CONF,ylim=c(0,100),col=colors[1],type="l",pch="a",lty=1,lwd=2,
-     xlab=c(""),ylab="Misclassification",main="Overall Confusion")
+     xlab=c(""),ylab="Misclassification",main="Overall Confusion",
+     xaxt="n")
+axis(1,at=1:8,labels=c("P","P.I","I","I.I","G","G.I","S","S.I"))
 points(k6$modelnum,k21$CONF,ylim=c(0,100),col=colors[4],type="l",pch="b",lty=2,lwd=2)
 points(k6$modelnum,k120$CONF,ylim=c(0,100),col=colors[8],type="l",pch="c",lty=3,lwd=2)
 points(k6$modelnum,k1000$CONF,ylim=c(0,100),col=colors[6],type="l",pch="d",lty=4,lwd=2)
@@ -809,7 +812,9 @@ points(k6$modelnum,k1000$CONF,ylim=c(0,100),col=colors[6],type="l",pch="d",lty=4
 #abline(h=100*(7/8),col="black",lty=6)
 
 plot(k6$modelnum,k6$CONFD,ylim=c(0,100),col=colors[1],type="l",pch="a",lty=1,lwd=2,
-     xlab=c("Model"),ylab="",main="Demography Confusion")
+     xlab=c("Model"),ylab="",main="Demography Confusion",
+     xaxt="n")
+axis(1,at=1:8,labels=c("P","P.I","I","I.I","G","G.I","S","S.I"))
 points(k6$modelnum,k21$CONFD,ylim=c(0,100),col=colors[4],type="l",pch="b",lty=2,lwd=2)
 points(k6$modelnum,k120$CONFD,ylim=c(0,100),col=colors[8],type="l",pch="c",lty=3,lwd=2)
 points(k6$modelnum,k1000$CONFD,ylim=c(0,100),col=colors[6],type="l",pch="d",lty=4,lwd=2)
@@ -817,7 +822,9 @@ points(k6$modelnum,k1000$CONFD,ylim=c(0,100),col=colors[6],type="l",pch="d",lty=
 #abline(h=100*(3/4),col="black",lty=6)
 
 plot(k6$modelnum,k6$CONFI,ylim=c(0,100),col=colors[1],type="l",pch="a",lty=1,lwd=2,
-     xlab=c(""),ylab="",main="IBD Confusion")
+     xlab=c(""),ylab="",main="IBD Confusion",
+     xaxt="n")
+axis(1,at=1:8,labels=c("P","P.I","I","I.I","G","G.I","S","S.I"))
 points(k6$modelnum,k21$CONFI,ylim=c(0,100),col=colors[4],type="l",pch="b",lty=2,lwd=2)
 points(k6$modelnum,k120$CONFI,ylim=c(0,100),col=colors[8],type="l",pch="c",lty=3,lwd=2)
 points(k6$modelnum,k1000$CONFI,ylim=c(0,100),col=colors[6],type="l",pch="d",lty=4,lwd=2)

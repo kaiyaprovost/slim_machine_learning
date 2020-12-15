@@ -1,0 +1,92 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=99999:00:00
+#PBS -N recapitate
+#PBS -j oe
+#PBS -m ae
+#PBS -M kprovost@amnh.org
+#PBS -k oe
+
+## tar xzf python_build.tgz
+## python_build/bin/python3 fib.py $1
+
+mkdir working
+
+module load python/3.7.0
+
+fgz1=$1
+fgz=`basename $fgz1`
+
+## f is the file
+gunzip -f $fgz
+f=${fgz%.gz}
+#f=$1
+
+#mkdir slimpy
+#mv slimpy.tar.gz ./slimpy/
+
+#cd ./slimpy/
+
+tar -xzf slimpy.tar.gz
+
+#cd ..
+
+#ls
+
+source slimpy/bin/activate
+conda-unpack
+
+# the "correct migrate" settings
+filename=`echo $f | cut -f1-18 -d'-'`
+TIMESTAMP=`echo $f | cut -f19 -d'-'`
+suffix=`echo $f | cut -f20 -d'-'`
+i=`echo $suffix | cut -f1 -d'.'`
+
+mu=`echo $f | cut -f6-7 -d'-'`
+recomb=`echo $f | cut -f11-12 -d'-'`
+Ne=`echo $f | cut -f4 -d'-'`
+scaling="0.02"
+
+command="slimpy/bin/python3 '''Overlaying_neutral_mutations_AND_recapitate_klp_OSG.py''' \
+$f $mu $TIMESTAMP $recomb $Ne $scaling;"
+eval $command
+
+## the "wrong migrate" settings
+filename=`echo $f | cut -f1-19 -d'-'`
+TIMESTAMP=`echo $f | cut -f20 -d'-'`
+suffix=`echo $f | cut -f21 -d'-'`
+i=`echo $suffix | cut -f1 -d'.'`
+
+mu=`echo $f | cut -f7-8 -d'-'`
+recomb=`echo $f | cut -f12-13 -d'-'`
+Ne=`echo $f | cut -f5 -d'-'`
+scaling="0.02"
+
+command="slimpy/bin/python3 '''Overlaying_neutral_mutations_AND_recapitate_klp_OSG.py''' \
+$f $mu $TIMESTAMP $recomb $Ne $scaling;"
+eval $command
+
+#mv * ./working
+
+#module load r/3.5.1-py2.7
+
+#Rscript --no-save 5.testingPopgenome_VCF_OSG.R
+
+#ls *
+#echo "XXXXX"
+#ls */*
+#echo "XXXXX"
+ls working/*
+
+#gzip -f *vcf 
+#gzip -f *STAT*
+mv *-recap_* ./working
+for i in ./working/*; do gzip -f $i; done;
+
+#mv *STAT* ./working
+#gzip -f ./working/*vcf
+#gzip -f ./working/*STAT*
+
+
+
+

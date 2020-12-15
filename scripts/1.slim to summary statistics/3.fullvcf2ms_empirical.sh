@@ -29,8 +29,6 @@ fulltempfile=${prefix}.ms
 ## 40 catenefier, 35 lampropeltis, 36 scutulatus, 44 atrox
 perl "/Users/kprovost/Documents/Github/slim_machine_learning/scripts/1.slim to summary statistics/vcf2MS.pl" $vcffile $fulltempfile 44
 done
-
-
 cd "/Users/kprovost/Dropbox (AMNH)/CFB_review_J_Biogeo/scutulatus/g_vcfs/"
 for vcffile in *vcf; do
 prefix=${vcffile%.vcf};
@@ -41,9 +39,8 @@ perl "/Users/kprovost/Documents/Github/slim_machine_learning/scripts/1.slim to s
 fi
 done
 
-
-cd "/Users/kprovost/Downloads/cardinalis vcf/"
-for vcffile in */*vcf; do
+cd "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/CFB_review_J_Biogeo/cardinalis vcf/"
+for vcffile in *temp*thr*.vcf; do
 echo $vcffile
 prefix=${vcffile%.vcf};
 fulltempfile=${prefix}.ms;

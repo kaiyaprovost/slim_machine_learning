@@ -1,7 +1,5 @@
 #!/bin/bash
 
-export TMPDIR=/home/kprovost/nas2/tempfiles/
-
 TIMESTAMP=`date +"%s"`
 
 echo "TIMESTAMP:" 
@@ -202,11 +200,11 @@ do
 done
 
 
-#if [ ! -d "slim-$filename-$TIMESTAMP/" ]; then
-#  mkdir "slim-$filename-$TIMESTAMP/"
-#fi
-#echo "moving to slim-$filename-$TIMESTAMP/"
-#cd "slim-$filename-$TIMESTAMP/"
+if [ ! -d "slim-$filename-$TIMESTAMP/" ]; then
+  mkdir "slim-$filename-$TIMESTAMP/"
+fi
+echo "moving to slim-$filename-$TIMESTAMP/"
+cd "slim-$filename-$TIMESTAMP/"
 
 ## set some arguments after because needed
 
@@ -381,12 +379,5 @@ for ((i=1;i<=simulations;i++)); do ## for run in simulations runs
 
 done 
 
-gzip -f *trees*
-gzip -f *locs*
-rm *header*
-gzip -f *log*
-mv *.* ./subdirectory
-
 ## after all simulations, call the python script 
 #ls *-$TIMESTAMP.sumstats.stats | xargs -t python /home/kprovost/Documents/Classes/Machine_Learning/SLiMTreeSeqPub-master/models_to_run/slim_model_selection.py
-

@@ -29,7 +29,7 @@ def main():
 	[X,Y,numcategories,classOrderLs,outputString] = sms_pre.inputDataFiles(filenames)
 	
 	suffix1="*"
-	suffix2="*NN"
+	suffix2="*NNexp"
 	suffix=suffix1+suffix2
 	
 	[X_train,X_test,X_validate,X_cv_list,Y_train,Y_test,Y_validate,Y_cv_list] = sms_pre.manualTrainTestSplit(X,Y,N=10)

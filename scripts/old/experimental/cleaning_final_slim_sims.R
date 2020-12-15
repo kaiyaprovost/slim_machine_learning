@@ -1,4 +1,3 @@
-
 read_original_file=T
 
 if(read_original_file == T){
@@ -16,10 +15,6 @@ if(read_original_file == T){
 }
 dim(df)
 
-
-
-
-
 ## ALREADY DONE TO CLEAN:
 df=df[,(colSums(is.na(df) | df==-100))!=nrow(df)]
 
@@ -27,7 +22,6 @@ df$SPATIAL = 1
 df$SPATIAL[grepl("NOSPAT",df$FILE) & !is.na(df$FILE)] = 0
 df$SPATIAL[df$YEAR=="EMPIRICAL" & !(is.na(df$YEAR))] = "EMPIRICAL"
 df$SIMDEFAULT.[df$SPATIAL==0] = "NO"
-
 
 df$CHROM[is.na(df$CHROM)] = df$CHROMOSOME[is.na(df$CHROM)]
 df$CHROMOSOME[is.na(df$CHROMOSOME)] = df$CHROM[is.na(df$CHROMOSOME)]
@@ -61,12 +55,10 @@ df$DEMOG[grepl("MIGRATE-0.001-",df$FILE) & grepl("SECCON-1-POP-2",df$FILE) & is.
 df$SPECIES[df$DEMOG %in% c("ISOLATION","PANMIXIA","GENEFLOW","SECCON")] = "SIMULATION"
 df$SPECIES=stringr::str_replace(df$SPECIES,"-CALLED","")
 
-
 df$WINDOWSIZE[is.na(df$WINDOWSIZE)] = df$WINDOW.SIZE[is.na(df$WINDOWSIZE)]
 df$WINDOW.SIZE[is.na(df$WINDOW.SIZE)] = df$WINDOWSIZE[is.na(df$WINDOW.SIZE)]
 
 if(sum(colnames(df) %in% "WINDOWSIZE",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("WINDOWSIZE"))] }## CANNOT RUN TWICE
-
 
 df$WINDOW[is.na(df$WINDOW)] = df$WINDOWNUM[is.na(df$WINDOW)]
 df$WINDOWNUM[is.na(df$WINDOWNUM)] = df$WINDOW[is.na(df$WINDOWNUM)]
@@ -101,7 +93,6 @@ df$EFFPOPSIZE[df$EFFPOPSIZE=="4E+05" & !(is.na(df$EFFPOPSIZE))] = 400000
 df$EFFPOPSIZE[df$EFFPOPSIZE=="2E+05" & !(is.na(df$EFFPOPSIZE))] = 200000
 df$EFFPOPSIZE[df$EFFPOPSIZE=="1E+05" & !(is.na(df$EFFPOPSIZE))] = 100000
 
-
 unique(df[,c("FILE","RUN")])
 
 df$DEMOG[grepl("ISOLATION",df$RUN) & is.na(df$DEMOG)] = "ISOLATION"
@@ -109,12 +100,10 @@ df$DEMOG[grepl("PANMIXIA",df$RUN) & is.na(df$DEMOG)] = "PANMIXIA"
 df$DEMOG[grepl("SECCON",df$RUN) & is.na(df$DEMOG)] = "SECCON"
 df$DEMOG[grepl("GENEFLOW",df$RUN) & is.na(df$DEMOG)] = "GENEFLOW"
 
-
 df$OVERLAP[is.na(df$OVERLAP)] = df$OVERLAP.SIZE[is.na(df$OVERLAP)]
 df$OVERLAP.SIZE[is.na(df$OVERLAP.SIZE)] = df$OVERLAP[is.na(df$OVERLAP.SIZE)]
 
 if(sum(colnames(df) %in% "OVERLAP",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("OVERLAP"))] }## CANNOT RUN TWICE
-
 
 df$YEAR[df$YEAR=="6K"] = 6000
 df$YEAR[df$YEAR=="21K"] = 21000
@@ -144,7 +133,6 @@ df$MIGRATION.RATE[grepl("MIGRATE-0.0-",df$FILE) & is.na(df$MIGRATION.RATE)] = 0
 df$MIGRATION.RATE[grepl("MIGRATE-0.001-",df$FILE) & is.na(df$MIGRATION.RATE)] = 0.001
 df$MIGRATION.RATE[grepl("MIGRATE-0.01-",df$FILE) & is.na(df$MIGRATION.RATE)] = 0.01
 
-
 df$NAME[is.na(df$NAME)] = df$FILE[is.na(df$NAME)]
 df$FILE[is.na(df$FILE)] = df$NAME[is.na(df$FILE)]
 
@@ -159,7 +147,6 @@ df$RUN[is.na(df$RUN)] = df$NAME[is.na(df$RUN)]
 #df$RUN[is.na(df$RUN)]=""
 
 if(sum(colnames(df) %in% "NAME",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("NAME"))] }## CANNOT RUN TWICE
-
 
 df$NUM.POP[grepl("-POP-1-",df$FILE) & is.na(df$NUM.POP)] = 1
 df$NUM.POP[grepl("-POP-2-",df$FILE) & is.na(df$NUM.POP)] = 2 
@@ -228,7 +215,6 @@ df$DEMOG[!(is.na(df$DEMOG)) & df$DEMOG=="EMPRICAL"] = "EMPIRICAL"
 df$NUMRUN[is.na(df$NUMRUN) & df$DEMOG == "SCALE1" & !(is.na(df$DEMOG))] = "SIMULATION"
 df$IBD[is.na(df$IBD) & df$DEMOG == "SCALE1" & !(is.na(df$DEMOG))] = "SIMULATION"
 
-
 df$NUMRUN[is.na(df$NUMRUN) & df$IBD == "1" & !(is.na(df$IBD))] = "SIMULATION"
 df$NUMRUN[is.na(df$NUMRUN) & df$IBD == "0" & !(is.na(df$IBD))] = "SIMULATION"
 
@@ -285,13 +271,11 @@ df$SIMDEFAULT.[is.na(df$SIMDEFAULT.) & df$SCALE == "EMPIRICAL" & !(is.na(df$SCAL
 df$YEAR[df$YEAR=="UNK" & !(is.na(df$YEAR))] = NA
 df$EFFPOPSIZE[df$EFFPOPSIZE=="UNK" & !(is.na(df$EFFPOPSIZE))] = NA
 
-
 df$SIMDEFAULT.[is.na(df$SIMDEFAULT.) & df$SCALE==0.02 & df$MUTATIONPOWER==-9 & df$RECOMPOWER==-8 & df$EFFPOPSIZE==4e+05] = "YES"
 df$SIMDEFAULT.[is.na(df$SIMDEFAULT.) & df$SCALE==0.02] = "YES"
 df$SIMDEFAULT.[is.na(df$SIMDEFAULT.) & df$MUTATIONPOWER==-9] = "YES"
 df$SIMDEFAULT.[is.na(df$SIMDEFAULT.) & df$RECOMPOWER==-8] = "YES"
 df$SIMDEFAULT.[is.na(df$SIMDEFAULT.) & df$YEAR %in% c(6000,21000,120000,1000000)] = "YES"
-
 
 df$MISSING = 0
 df$MISSING[grepl("_MISSING0.5.",df$FILE)] = 0.5
@@ -300,8 +284,6 @@ df$MISSING[df$MISSING==0 & df$DEMOG=="EMPIRICAL"] = "EMPIRICAL"
 df$BASES = 0
 df$BASES[grepl("_BASES.",df$FILE)] = 1
 df$BASES[df$BASES==0 & df$DEMOG=="EMPIRICAL"] = "EMPIRICAL"
-
-
 
 ## need to do migration rate empirical
 ## need to do recom power empirical
@@ -356,7 +338,6 @@ df[df=="NA"] = NA
 df$TIMESTAMP[is.na(df$TIMESTAMP) & grepl("MIGRATE",df$FILE) & !(is.na(df$FILE))]=
   as.character(sapply(df$FILE[is.na(df$TIMESTAMP) & grepl("MIGRATE",df$FILE) & !(is.na(df$FILE))],FUN=function(x){strsplit(x,"-")[[1]][19]}))
 
-
 ## now check cols with same names
 ##HAP.DIVERSITY.WITHIN, .1, .2, .3, .4
 df$DIV_PER_SITE=signif(as.numeric(df$DIV_PER_SITE),6)
@@ -365,8 +346,6 @@ df$DIV_PER_SITE.1=signif(as.numeric(df$DIV_PER_SITE.1),6)
 df$DIV_PER_SITE[is.na(df$DIV_PER_SITE)] = df$DIV_PER_SITE.1[is.na(df$DIV_PER_SITE)]
 df$DIV_PER_SITE.1[is.na(df$DIV_PER_SITE.1)] = df$DIV_PER_SITE[is.na(df$DIV_PER_SITE.1)]
 if(sum(colnames(df) %in% "DIV_PER_SITE.1",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("DIV_PER_SITE.1"))] }## CANNOT RUN TWICE
-
-
 
 df$HAPLOTYPE.F_ST=signif(as.numeric(df$HAPLOTYPE.F_ST),6)
 df$HAPLOTYPE.F_ST.1=signif(as.numeric(df$HAPLOTYPE.F_ST.1),6)
@@ -388,7 +367,6 @@ if(sum(colnames(df) %in% "HAPLOTYPE.F_ST.1",na.rm=T) >= 1){df = df[,-which(names
 if(sum(colnames(df) %in% "HAPLOTYPE.F_ST.2",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("HAPLOTYPE.F_ST.2"))] }## CANNOT RUN TWICE
 if(sum(colnames(df) %in% "HAPLOTYPE.F_ST.3",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("HAPLOTYPE.F_ST.3"))] }## CANNOT RUN TWICE
 
-
 df$HUDSON.G_ST=signif(as.numeric(df$HUDSON.G_ST),6)
 df$HUDSON.G_ST.1=signif(as.numeric(df$HUDSON.G_ST.1),6)
 df$HUDSON.G_ST.2=signif(as.numeric(df$HUDSON.G_ST.2),6)
@@ -408,7 +386,6 @@ df$HUDSON.G_ST.3[is.na(df$HUDSON.G_ST.3)] = df$HUDSON.G_ST.2[is.na(df$HUDSON.G_S
 if(sum(colnames(df) %in% "HUDSON.G_ST.1",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("HUDSON.G_ST.1"))] }## CANNOT RUN TWICE
 if(sum(colnames(df) %in% "HUDSON.G_ST.2",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("HUDSON.G_ST.2"))] }## CANNOT RUN TWICE
 if(sum(colnames(df) %in% "HUDSON.G_ST.3",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("HUDSON.G_ST.3"))] }## CANNOT RUN TWICE
-
 
 df$HUDSON.H_ST=signif(as.numeric(df$HUDSON.H_ST),6)
 df$HUDSON.H_ST.1=signif(as.numeric(df$HUDSON.H_ST.1),6)
@@ -430,11 +407,8 @@ if(sum(colnames(df) %in% "HUDSON.H_ST.1",na.rm=T) >= 1){df = df[,-which(names(df
 if(sum(colnames(df) %in% "HUDSON.H_ST.2",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("HUDSON.H_ST.2"))] }## CANNOT RUN TWICE
 if(sum(colnames(df) %in% "HUDSON.H_ST.3",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("HUDSON.H_ST.3"))] }## CANNOT RUN TWICE
 
-
 df$KURT_HAPLOTYPE.COUNTS=signif(as.numeric(df$KURT_HAPLOTYPE.COUNTS),6)
 df$SKEW_HAPLOTYPE.COUNTS=signif(as.numeric(df$SKEW_HAPLOTYPE.COUNTS),6)
-
-
 
 df$KURT_NUC.DIVERSITY.WITHIN=signif(as.numeric(df$KURT_NUC.DIVERSITY.WITHIN),6)
 df$KURT_NUC.DIVERSITY.WITHIN.1=signif(as.numeric(df$KURT_NUC.DIVERSITY.WITHIN.1),6)
@@ -443,20 +417,17 @@ df$KURT_NUC.DIVERSITY.WITHIN[is.na(df$KURT_NUC.DIVERSITY.WITHIN)] = df$KURT_NUC.
 df$KURT_NUC.DIVERSITY.WITHIN.1[is.na(df$KURT_NUC.DIVERSITY.WITHIN.1)] = df$KURT_NUC.DIVERSITY.WITHIN[is.na(df$KURT_NUC.DIVERSITY.WITHIN.1)]
 if(sum(colnames(df) %in% "KURT_NUC.DIVERSITY.WITHIN.1",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("KURT_NUC.DIVERSITY.WITHIN.1"))] }## CANNOT RUN TWICE
 
-
 df$MEAN_NUC.DIVERSITY.WITHIN=signif(as.numeric(df$MEAN_NUC.DIVERSITY.WITHIN),6)
 df$MEAN_NUC.DIVERSITY.WITHIN.1=signif(as.numeric(df$MEAN_NUC.DIVERSITY.WITHIN.1),6)
 df$MEAN_NUC.DIVERSITY.WITHIN[is.na(df$MEAN_NUC.DIVERSITY.WITHIN)] = df$MEAN_NUC.DIVERSITY.WITHIN.1[is.na(df$MEAN_NUC.DIVERSITY.WITHIN)]
 df$MEAN_NUC.DIVERSITY.WITHIN.1[is.na(df$MEAN_NUC.DIVERSITY.WITHIN.1)] = df$MEAN_NUC.DIVERSITY.WITHIN[is.na(df$MEAN_NUC.DIVERSITY.WITHIN.1)]
 if(sum(colnames(df) %in% "MEAN_NUC.DIVERSITY.WITHIN.1",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("MEAN_NUC.DIVERSITY.WITHIN.1"))] }## CANNOT RUN TWICE
 
-
 df$MS.HAPLOTYPE.DIVERSITY=signif(as.numeric(df$MS.HAPLOTYPE.DIVERSITY),6)
 df$MS.HAPLOTYPE.DIVERSITY2=signif(as.numeric(df$MS.HAPLOTYPE.DIVERSITY2),6)
 df$MS.HAPLOTYPE.DIVERSITY[is.na(df$MS.HAPLOTYPE.DIVERSITY)] = df$MS.HAPLOTYPE.DIVERSITY2[is.na(df$MS.HAPLOTYPE.DIVERSITY)]
 df$MS.HAPLOTYPE.DIVERSITY2[is.na(df$MS.HAPLOTYPE.DIVERSITY2)] = df$MS.HAPLOTYPE.DIVERSITY[is.na(df$MS.HAPLOTYPE.DIVERSITY2)]
 if(sum(colnames(df) %in% "MS.HAPLOTYPE.DIVERSITY2",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("MS.HAPLOTYPE.DIVERSITY2"))] }## CANNOT RUN TWICE
-
 
 df$NEI.G_ST=signif(as.numeric(df$NEI.G_ST),6)
 df$NEI.G_ST.1=signif(as.numeric(df$NEI.G_ST.1),6)
@@ -477,7 +448,6 @@ df$NEI.G_ST.3[is.na(df$NEI.G_ST.3)] = df$NEI.G_ST.2[is.na(df$NEI.G_ST.3)]
 if(sum(colnames(df) %in% "NEI.G_ST.1",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("NEI.G_ST.1"))] }## CANNOT RUN TWICE
 if(sum(colnames(df) %in% "NEI.G_ST.2",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("NEI.G_ST.2"))] }## CANNOT RUN TWICE
 if(sum(colnames(df) %in% "NEI.G_ST.3",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("NEI.G_ST.3"))] }## CANNOT RUN TWICE
-
 
 df$NUC.F_ST.VS.ALL=signif(as.numeric(df$NUC.F_ST.VS.ALL),6)
 df$NUC.F_ST.VS.ALL.1=signif(as.numeric(df$NUC.F_ST.VS.ALL.1),6)
@@ -505,8 +475,6 @@ df$NUC.F_ST.VS.ALL.4[is.na(df$NUC.F_ST.VS.ALL.4)] = df$NUC.F_ST.VS.ALL[is.na(df$
 df$NUC.F_ST.VS.ALL[is.na(df$NUC.F_ST.VS.ALL)] = df$NUC.F_ST.VS.ALL.4[is.na(df$NUC.F_ST.VS.ALL)]
 df = df[,-which(names(df) %in% c("NUC.F_ST.VS.ALL.4"))]
 if(sum(colnames(df) %in% "NUC.F_ST.VS.ALL.4",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("NUC.F_ST.VS.ALL.4"))] }## CANNOT RUN TWICE
-
-
 
 df$NUCLEOTIDE.F_ST=signif(as.numeric(df$NUCLEOTIDE.F_ST),6)
 df$NUCLEOTIDE.F_ST.1=signif(as.numeric(df$NUCLEOTIDE.F_ST.1),6)
@@ -536,7 +504,6 @@ if(sum(colnames(df) %in% "PROB_MINOR.ALLELE.FREQS.1",na.rm=T) >= 1){df = df[,-wh
 if(sum(colnames(df) %in% "PROB_NUC.DIVERSITY.WITHIN",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("PROB_NUC.DIVERSITY.WITHIN"))] }## CANNOT RUN TWICE
 if(sum(colnames(df) %in% "PROB_NUC.DIVERSITY.WITHIN.1",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("PROB_NUC.DIVERSITY.WITHIN.1"))] }## CANNOT RUN TWICE
 
-
 df$SKEW_NUC.DIVERSITY.WITHIN=signif(as.numeric(df$SKEW_NUC.DIVERSITY.WITHIN),6)
 df$SKEW_NUC.DIVERSITY.WITHIN.1=signif(as.numeric(df$SKEW_NUC.DIVERSITY.WITHIN.1),6)
 df$SKEW_NUC.DIVERSITY.WITHIN[is.na(df$SKEW_NUC.DIVERSITY.WITHIN)] = df$SKEW_NUC.DIVERSITY.WITHIN.1[is.na(df$SKEW_NUC.DIVERSITY.WITHIN)]
@@ -553,11 +520,9 @@ df$VAR_NUC.DIVERSITY.WITHIN[is.na(df$VAR_NUC.DIVERSITY.WITHIN)] = df$VAR_NUC.DIV
 df$SKEW_NUC.DIVERSITY.WITHIN.1[is.na(df$VAR_NUC.DIVERSITY.WITHIN.1)] = df$VAR_NUC.DIVERSITY.WITHIN[is.na(df$VAR_NUC.DIVERSITY.WITHIN.1)]
 if(sum(colnames(df) %in% "VAR_NUC.DIVERSITY.WITHIN.1",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("VAR_NUC.DIVERSITY.WITHIN.1"))] }## CANNOT RUN TWICE
 
-
 if(sum(colnames(df) %in% "SNN",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("SNN"))] }## CANNOT RUN TWICE
 if(sum(colnames(df) %in% "SNN.1",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("SNN.1"))] }## CANNOT RUN TWICE
 if(sum(colnames(df) %in% "SNN.2",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("SNN.2"))] }## CANNOT RUN TWICE
-
 
 novariance_cols=sapply(1:ncol(df),FUN=function(x){var(df[,x],na.rm=T)})==0
 novariance_cols[is.na(novariance_cols)] = FALSE
@@ -580,15 +545,12 @@ if(sum(colnames(df) %in% "HAP.F_ST.VS.ALL.2",na.rm=T) >= 1){df = df[,-which(name
 if(sum(colnames(df) %in% "HAP.F_ST.VS.ALL.4",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("HAP.F_ST.VS.ALL.4"))] }## CANNOT RUN TWICE
 if(sum(colnames(df) %in% "HUDSON.K_ST.1",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("HUDSON.K_ST.1"))] }## CANNOT RUN TWICE
 
-
 df$CHROMOSOME[is.na(df$CHROMOSOME) & df$DEMOG=="SCALE1" & !(is.na(df$DEMOG))] = "SIMULATION"
 df$MUTATIONPOWER[is.na(df$MUTATIONPOWER) & df$DEMOG=="EMPIRICAL" & !(is.na(df$MUTATIONPOWER))] = "EMPIRICAL"
 df$YEAR[is.na(df$YEAR) & df$DEMOG=="EMPIRICAL" & !(is.na(df$YEAR))] = "EMPIRICAL"
 df$YEAR[df$YEAR==1 & df$DEMOG=="EMPIRICAL" & !(is.na(df$YEAR))] = "EMPIRICAL"
 
-
 df$WINDOW[is.na(df$WINDOW) & df$CHROMOSOME=="SIMULATION" & !(is.na(df$CHROMOSOME))] = 0
-
 
 ## metadata if species is not sim 
 df$EFFPOPSIZE[is.na(df$EFFPOPSIZE) & df$SPECIES!="SIMULATION" & !(is.na(df$SPECIES))] = "EMPIRICAL"
@@ -603,7 +565,6 @@ df$SCALE[is.na(df$SCALE) & df$SPECIES!="SIMULATION" & !(is.na(df$SPECIES))] = "E
 df$SECCON[is.na(df$SECCON) & df$SPECIES!="SIMULATION" & !(is.na(df$SPECIES))] = "EMPIRICAL"
 df$RECOMPOWER[is.na(df$RECOMPOWER) & df$SPECIES!="SIMULATION" & !(is.na(df$SPECIES))] = "EMPIRICAL"
 df$SIMDEFAULT.[is.na(df$SIMDEFAULT.) & df$SPECIES!="SIMULATION" & !(is.na(df$SPECIES))] = "EMPIRICAL"
-
 
 df$OVERLAP.SIZE[!(is.na(df$FILE)) & is.na(df$OVERLAP.SIZE) & grepl("_O20000_",df$FILE)] = 20000
 df$OVERLAP.SIZE[!(is.na(df$FILE)) & is.na(df$OVERLAP.SIZE) & grepl("_O100000_",df$FILE)] = 100000
@@ -667,7 +628,6 @@ df$VAR_MINOR.ALLELE.FREQS=signif(as.numeric(df$VAR_MINOR.ALLELE.FREQS),6)
 df$WALL.B=signif(as.numeric(df$WALL.B),6)
 df$WALL.Q=signif(as.numeric(df$WALL.Q),6)
 
-
 ## make sure get rid of -100
 ## STROBECK.S, ROZAS.R_2, N.VALID.SITES,FU.F_S, FU.F_S.1
 df$STROBECK.S[df$STROBECK.S==-100 & !(is.na(df$STROBECK.S))] = NA
@@ -678,9 +638,7 @@ df$FU.F_S.1[df$FU.F_S.1==-100 & !(is.na(df$FU.F_S.1))] = NA
 
 if(sum(colnames(df) %in% "N.VALID.SITES",na.rm=T) >= 1){df = df[,-which(names(df) %in% c("N.VALID.SITES"))] }## CANNOT RUN TWICE
 
-
 df=df[order(df$FILE),]
-
 
 head(df[grepl("TGUT_",df$FILE) & is.na(df$CHROMOSOME) & !(is.na(df$FILE)),])
 df$CHROMOSOME[grepl("TGUT_",df$FILE) & is.na(df$CHROMOSOME) & !(is.na(df$FILE))]=as.character(sapply(df$FILE[grepl("TGUT_",df$FILE) & is.na(df$CHROMOSOME) & !(is.na(df$FILE))],FUN=function(x){strsplit(strsplit(x,"_")[[1]][4],"\\.")[[1]][1]}))
@@ -690,7 +648,6 @@ df$FILE[df$FILE=="SIMULATION" & df$RUN!="SIMULATION" & !(is.na(df$RUN))] <- df$R
 
 #df$FILE[df$FILE=="" & df$RUN!="" & !(is.na(df$RUN))] <- df$RUN[df$FILE=="" & df$RUN!="" & !(is.na(df$RUN))]
 #df$RUN[df$RUN=="" & df$FILE!="" & !(is.na(df$FILE))] = df$FILE[df$RUN=="" & df$FILE!="" & !(is.na(df$FILE))]
-
 
 df$WINDOW[df$FILE==1 & df$RUN==1 & is.na(df$WINDOW)]=0
 df$YEAR[df$FILE==1 & df$RUN==1 & is.na(df$YEAR)]=6000
@@ -718,7 +675,6 @@ df$MISSING[df$FILE=="SIMULATION" & df$RUN=="SIMULATION" & is.na(df$MISSING)]=0
 df$EFFPOPSIZE[df$FILE=="SIMULATION" & df$RUN=="SIMULATION" & is.na(df$EFFPOPSIZE)]=4e+05
 df$CHROMOSOME[df$FILE=="SIMULATION" & df$RUN=="SIMULATION" & is.na(df$CHROMOSOME)]="SIMULATION"
 df$BASES[df$FILE=="SIMULATION" & df$RUN=="SIMULATION" & is.na(df$BASES)]=0
-
 
 metadata_columns = c("CHROMOSOME","DEMOG","EFFPOPSIZE","FILE","IBD","MIGRATION.RATE","MUTATIONPOWER","NUM.POP","NUMRUN","OVERLAP.SIZE","RECOMPOWER","RUN",
                      "SCALE","SECCON","SIMDEFAULT.","SPECIES","TIMESTAMP","WINDOW","WINDOW.SIZE","YEAR","MISSING","BASES")
@@ -861,8 +817,6 @@ sort(colSums(is.na(df)))
 df[,"N.SITES.CORRECTED"]=as.numeric(df[,"N.SITES.CORRECTED"])
 df[,"N.SITES"]=as.numeric(df[,"N.SITES"])
 
-
-
 ## and now we try to fix the "1" "1" and "SIM" "SIM"
 one_one = unique(df[df$RUN=="1" & df$FILE=="1",])
 one_one = one_one[order(one_one$DIV_PER_SITE),]
@@ -899,7 +853,6 @@ dim(one_one)
 
 df = df[!(paste(df$FILE,df$RUN) %in% paste(one_one$FILE,one_one$RUN)),]
 df = rbind(df,one_one)
-
 
 sim_sim = unique(df[df$RUN=="SIMULATION" & df$FILE=="SIMULATION",])
 sim_sim = sim_sim[order(sim_sim$DIV_PER_SITE),]
@@ -955,9 +908,6 @@ df=df[order(df$BASES,df$CHROMOSOME,df$DEMOG,df$EFFPOPSIZE,df$FILE,df$IBD,df$MIGR
 
 df = unique(df)
 dim(df)
-
-
-
 
 write.table(df,"/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER2_GENOMES/ANALYSIS/called_geno/SPECIES/STATS/MERGED_ALL_SHEETS_TOGETHER_9SEPT2020_CLEANED.txt")
 
@@ -1019,7 +969,6 @@ points(pca_data$PC1[pca_data$SPECIES!="SIMULATION"],pca_data$PC2[pca_data$SPECIE
        col=rgb(0,0,0,0.2))
 dev.off()
 
-
 pca$rotation
 
 ## smaller effpopsizes than 4e-05, other mutpowers, scale does not seem to matter
@@ -1039,9 +988,6 @@ var_11=c("DIV_PER_SITE","FU.LI.D","HAP.DIVERSITY.WITHIN","KURT_HAPLOTYPE.COUNTS"
 ## metadata 
 metadata_columns = c("CHROMOSOME","DEMOG","EFFPOPSIZE","FILE","IBD","MIGRATION.RATE","MUTATIONPOWER","NUM.POP","NUMRUN","OVERLAP.SIZE","RECOMPOWER","RUN",
                      "SCALE","SECCON","SIMDEFAULT.","SPECIES","TIMESTAMP","WINDOW","WINDOW.SIZE","YEAR","MISSING","BASES")
-
-
-
 
 original=df[df$SIMDEFAULT.=="YES",]
 original=original[as.numeric(original$TIMESTAMP)>1 & !(is.na(original$TIMESTAMP)),]
@@ -1084,8 +1030,6 @@ rotation = pca$rotation
 
 snake_pca=predict(object=pca,newdata=dfxy)
 snake_pca = cbind(snake_pca,dfxy_2)
-
-
 
 org_33_pca = org_33[,1:33]
 
@@ -1147,9 +1091,7 @@ points(snake_pca$PC1,snake_pca$PC2,col="lightgreen")
 points(snake_pca$PC1[!(grepl("LOCUS",snake_pca$FILE))],
        snake_pca$PC2[!(grepl("LOCUS",snake_pca$FILE))],col="darkgreen")
 
-
 dev.off()
-
 
 View(snake_pca[!(grepl("LOCUS",snake_pca$FILE)),])
 summary(org_33)
@@ -1168,17 +1110,12 @@ for(i in 1:ncol(df)){
             ylab=colnames(df)[i],
             names=c("Sims","Snakes"))
     
-   
     #  print(i)
     #  print(colnames(df)[i])
     #  test=t.test(as.numeric(df[,i]),as.numeric(dfxy[,colnames(df)[i]]))
     #  print(test$p.value)
     }
-    
-    
   }
-  
-
 }
 dev.off()
 
@@ -1189,9 +1126,7 @@ for(i in 1:ncol(df)){
   if(!(is.na(unique(as.numeric(df[,i])))) & colnames(df)[i] %in% colnames(dfxy) ){
     if( length(as.numeric(dfxy[,colnames(df)[i]]))>0 ){
       
-      
       for(j in c(1:8,"SIMULATION","EMPIRICAL")){
-        
         
         mini=min(c(as.numeric(df[,i]),as.numeric(dfxy[,colnames(df)[i]])),na.rm=T)
         maxi=max(c(as.numeric(df[,i]),as.numeric(dfxy[,colnames(df)[i]])),na.rm=T)
@@ -1211,23 +1146,14 @@ for(i in 1:ncol(df)){
         
       }
       
-
-      
-      
       #  print(i)
       #  print(colnames(df)[i])
       #  test=t.test(as.numeric(df[,i]),as.numeric(dfxy[,colnames(df)[i]]))
       #  print(test$p.value)
     }
-    
-    
   }
-  
-  
 }
 dev.off()
-
-
 
 ## keeping snakes
 keep_snake_var = c("FU.LI.D","FU.LI.F","MEAN_MINOR.ALLELE.FREQS","MEAN_NUC.DIVERSITY.WITHIN",
@@ -1237,7 +1163,6 @@ maybe_snake_var = c("DIV_PER_SITE","HAP.DIVERSITY.WITHIN","KURT_MINOR.ALLELE.FRE
                     "N.SEGREGATING.SITES","THETA_FU.LI","THETA_TAJIMA","THETA_WATTERSON")
 no_snake_var = c("KURT_HAPLOTYPE.COUNTS","MEAN_HAPLOTYPE.COUNTS","N.SITES.CORRECTED","PI",
                  "SKEW_HAPLOTYPE.COUNTS","THETA_ACHAZ.TAJIMA","THETA_ACHAZ.WATTERSON","VAR_HAPLOTYPE.COUNTS")
-
 
 df_pca3 = df[,c(keep_snake_var,"NUMRUN")]
 df_pca3=df_pca3[complete.cases(df_pca3),]
@@ -1255,8 +1180,6 @@ for (i in 1:8) {
                radius = sqrt(qchisq(.95, df=2)),col = "black")
 }
 dev.off()
-
-
 
 df_pca2=df[,c(keep_snake_var,"DEMOG")]
 df_pca2=df_pca2[complete.cases(df_pca2),]
@@ -1287,7 +1210,6 @@ for (i in 1:4) {
 }
 dev.off()
 
-
 small_variables = c("DIV_PER_SITE","HAP.DIVERSITY.WITHIN","HAP.DIVERSITY.WITHIN.1",
                     "HUDSON.KAPLAN.RM","N.BIALLELIC.SITES","N.SEGREGATING.SITES",
                     "N.SITES","THETA_WATTERSON","FU.LI.D")
@@ -1301,10 +1223,8 @@ dim(small_pca)
 pca_small = prcomp(small_pca[,1:9],center = T,scale. = T)
 pca_small_data = pca_small$x
 pca_snake = predict(pca_small,small_snake[,1:9])
-plot(pca_small_data[,1:2],xlim=c(-30,65),ylim=c(-10,150)
-     )
+plot(pca_small_data[,1:2],xlim=c(-30,65),ylim=c(-10,150))
 points(pca_snake[,1:2],col="red")
-
 
 df_ag_33 = df_allgood[,c(metadata_columns,var_33)]
 df_ag_11 = df_allgood[,c(metadata_columns,var_11)]
@@ -1321,12 +1241,8 @@ df_ag_11=df_ag_11[ , order(colnames(df_ag_11))]
 df_ag_11 = unique(df_ag_11)
 write.table(df_ag_11,"/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER2_GENOMES/ANALYSIS/called_geno/SPECIES/STATS/MERGED_ALL_SHEETS_TOGETHER_9SEPT2020_CLEANED_ALLGOOD_11.txt")
 
-
-
-
 df3=apply(df2,2,as.numeric)
 summary(df3[,var_11])
-
 
 cols_numeric=sapply(1:ncol(df),FUN=function(x){class(df[,x])!="character"})
 
@@ -1352,9 +1268,6 @@ corrplot::corrplot(cor_matrix2,method="number",tl.cex=0.2,na.label="square",na.l
                    order="alphabet",cl.cex=0.2,number.cex=0.2)
 dev.off()
 
-
-
-
 pdf("simulations_data_differences.pdf")
 par(mfrow=c(2,2),mar=c(4,4,0,0))
 for(i in rev(c(1:5,7:53,55:113,115:193,195:212))){
@@ -1363,9 +1276,6 @@ for(i in rev(c(1:5,7:53,55:113,115:193,195:212))){
   temp[,1] = as.numeric(as.character(temp[,1]))
   temp = temp[temp$DEMOG!="EMPIRICAL",]
   temp = temp[complete.cases(temp),]
-  
-  
-
   
   if(length(unique(as.numeric(temp[,1]))) >1 & length(unique(as.character(temp[,2])))>1 
      & length(unique(as.character(temp[,3])))>1 & length(unique(as.character(temp[,4])))>1){
@@ -1381,8 +1291,3 @@ for(i in rev(c(1:5,7:53,55:113,115:193,195:212))){
   }
 }
 dev.off()
-
-
-
-
-

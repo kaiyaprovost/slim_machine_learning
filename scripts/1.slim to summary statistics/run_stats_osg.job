@@ -1,0 +1,34 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=99999:00:00
+#PBS -N recapitate
+#PBS -j oe
+#PBS -m ae
+#PBS -M kprovost@amnh.org
+#PBS -k oe
+
+mkdir stats
+mkdir localR
+
+module load r/3.5.1-py2.7
+
+fgz1=$1
+fgz=`basename $fgz1`
+
+## f is the file
+gunzip -f $fgz
+f=${fgz%.gz}
+#f=$1
+
+#echo "R_LIBS_USER=$PWD/localR/" > .Renviron
+
+mkdir working/
+
+Rscript --no-save 5.testingPopgenome_VCF_OSG.R
+
+#mv *vcf ./working/
+#mv *vcf.gz ./working/
+
+mv *STAT* ./stats/
+
+

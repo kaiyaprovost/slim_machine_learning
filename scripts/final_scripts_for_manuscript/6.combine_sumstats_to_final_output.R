@@ -1,3 +1,5 @@
+## note: this file assumes you have a folder called "simulated_statistics" which contains your .fulltemp files
+
 library(gtools)
 library(R.utils)
 
@@ -10,17 +12,14 @@ doTrimmed = FALSE
 ## import popgenome
 if (doPopgenome==TRUE) {
   pathlist = c(
-    #"/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/stats/"
-    #"/home/kprovost/nas5/slim_osg/stats"
-    "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/CFB_review_J_Biogeo/cardinalis vcf/DONE/"
+    "~/simulated_statistics/"
     )
   
   for (path in pathlist) {
     print(path)
     setwd(path)
-    files = c(list.files(path=path,pattern = "stats$", recursive = F,full.names = T)#,
-              #list.files(pattern = ".STATS$", recursive = T,full.names = T)
-              )
+    files = c(list.files(pattern = "popgenome.stats$", recursive = T,full.names = T),
+              list.files(pattern = ".STATS$", recursive = T,full.names = T))
     #files = list.files(pattern = "STATS.*.txt", recursive = F,full.names = T)
     #files = sample(files)
     files = files[!(grepl("COMBO",files))]

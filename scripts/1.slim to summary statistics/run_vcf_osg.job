@@ -1,0 +1,42 @@
+### #!/bin/bash
+## tar xzf python_build.tgz
+## python_build/bin/python3 fib.py $1
+
+mkdir working
+
+#fgz=$1
+## f is the file
+#gunzip -f $fgz
+#f=${fgz%.gz}
+f=$1
+
+tar -xzf py2pack.tar.gz
+
+source activate py2pack
+
+filename=`echo $f | cut -f1-18 -d'-'`
+TIMESTAMP=`echo $f | cut -f19 -d'-'`
+suffix=`echo $f | cut -f20 -d'-'`
+i=`echo $suffix | cut -f1 -d'.'`
+
+mu=`echo $f | cut -f6-7 -d'-'`
+recomb=`echo $f | cut -f11-12 -d'-'`
+Ne=`echo $f | cut -f4 -d'-'`
+scaling="0.02"
+
+command="py2pack/bin/python3 '''Overlaying_neutral_mutations_AND_recapitate_klp.py''' \
+$f $mu $TIMESTAMP $recomb $Ne $scaling;"
+eval $command
+
+#module load r/3.5.1-py2.7
+
+#Rscript --no-save 5.testingPopgenome_VCF_OSG.R
+
+gzip -f *vcf 
+gzip -f *STAT*
+mv *vcf ./working
+mv *STAT* ./working
+gzip -f ./working/*vcf
+gzip -f ./working/*STAT*
+
+

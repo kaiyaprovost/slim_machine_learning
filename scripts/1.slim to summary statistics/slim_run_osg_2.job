@@ -1,0 +1,46 @@
+#!/bin/bash
+
+mkdir subdirectory
+
+## M	N	m	O	i	v	B	r	f	G	g	H	h	w
+M=$1
+N=$2
+m=$3
+O=$4
+i=$5
+v=$6
+B=$7
+r=$8
+f=$9
+G=$10
+g=$11
+H=$12
+h=$13
+w=$14
+
+echo $M $N $m $O $i $v $B $r $f $G $g $H $h >> progress.txt 2>&1
+
+## slim-grow-neut-nospat-1pop-isol.job
+bash 1.run_slim_2pop_recpacitate.sh \
+-a 0 -B "$B" -c 1 \
+-e "vireotest_slim_TRANSITION_57x87_coarse.txt" \
+-f "$f" -g "$g" -G "$G" \
+-h "$h" -H "$H" \
+-I "0.twopopulations_variable_parameters.slim" \
+-i "$i" -l 1 -m "$m" \
+-M "$M" -N "$N" \
+-o "migrate-$M-popsize-$N-mut-$m-gen-$O-recom-$r-ibd-$i-seccon-$v-pop-$B-growth-$g-$G-$f-selection-$h-$H-$w" \
+-O "$O" \
+-P "" \
+-p slim \
+-r "$r" -s 20 \
+-S 2 -t 1 -v "$v" \
+-V 1000 -w "$w" -X 0.02 \
+-x 57 -y 87 
+>> "slimlog-migrate-$M-popsize-$N-mut-$m-gen-$O-recom-$r-ibd-$i-seccon-$v-pop-$B-growth-$g-$G-$f-selection-$h-$H-$w.log" 2>&1
+
+gzip -f *tree*
+gzip -f *log*
+rm *header*
+
+mv *gz ./subdirectory/
