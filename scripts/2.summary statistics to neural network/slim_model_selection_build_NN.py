@@ -34,10 +34,8 @@ def makeGridCVNN(X_train,Y_train,param_grid,X_test,Y_test,n_jobs=-1,scores=["f1"
 	## see if you can use your data in R or matlab 
 	#print("\Starting parameters:")
 	#print(clf.get_params())
-
 	#scores = ["f1"]
 	#‘f1’,‘f1_micro’,‘f1_macro’,‘f1_weighted’,‘f1_samples’
-	
 	for score in scores:
 		print("# Tuning hyper-parameters for %s" % score)
 		print()
@@ -65,8 +63,6 @@ def makeGridCVNN(X_train,Y_train,param_grid,X_test,Y_test,n_jobs=-1,scores=["f1"
 				print("%0.3f (+/-%0.03f) for %r"
 					  % (mean, std * 2, params))
 			print()
-	
-	
 	#print("\tStart Search")
 	#clf = GridSearchCV(MLPClassifier(), param_grid,refit=True,cv=5) ## tweak this 
 	#print(clf.get_params())
@@ -84,9 +80,8 @@ def makeGridCVNN(X_train,Y_train,param_grid,X_test,Y_test,n_jobs=-1,scores=["f1"
 	#print(clf.get_params())
 	#print("BEST")
 	#print(clf.best_params_)
-	
 	return(clf)
-	
+
 def manualSingleValidationParameters(param_grid,X_train,X_validate,Y_train,Y_validate):
 	print("\tNN with manual single validation")
 	print("Fitting the following parameters:")
