@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## this script inputs files that look like prefix-TIMESTAMP-i.trees
+## this script inputs files that look like prefix-TIMESTAMP-i.trees.gz
 ## and outputs files that look like prefix-TIMESTAMP-i-recap_mu-recomb-Ne-scaling.trees or prefix-TIMESTAMP-i-recap_mu-recomb-Ne-scaling.vcf 
 ## where mu, recomb, NE, and scaling are given by the values below
 
@@ -16,6 +16,7 @@ mu="1e-7"
 recomb="1e-8"
 Ne="1000"
 scaling="0.02"
+
 
 for fgz in *trees.gz; do
 	gunzip -f $fgz;

@@ -5,8 +5,6 @@
 
 # citation: https://zenodo.org/record/10288#.W7vDgxNKgWI
 
-# perl "/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/scripts/vcf2MS.pl" $vcffile $fulltempfile $outSamp
-
 $vcf = $ARGV[0];
 $output = $ARGV[1];
 $sample_size = $ARGV[2];

@@ -1,55 +1,58 @@
 initialize() {
 	
 	cat("\nStart initialize\n");
+	// uncomment this if you want to set a seed 
 	//setSeed(1);
 	
-	defineConstant("nucleotide",0);
-	defineConstant("chromLength",100000);
+	defineConstant("nucleotide",0); // 0/1, whether to simulate individual nucleotides as ACTG. note that as of writing this does not work with treesequence recording. 
+	defineConstant("chromLength",100000); // the length of the simulated chromosome in bases. 
 	
 	if (exists ("slimgui")) {
 		// this chunk of code will only run in the gui -- otherwise you must specify in the bash script
+		// note these are default values. 
+		// flags from bash script are also shown for reference
 		
-		defineConstant("mu_un", 2e-7); // -m
-		defineConstant("recomb_un",2e-8); // -r
-		defineConstant("N_un",250); // -N
-		defineConstant("N_dif_un",250); // -f 
+		defineConstant("mu_un", 2e-7); // -m, the unscaled mutation rate
+		defineConstant("recomb_un",2e-8); // -r, the unscaled recombination rate
+		defineConstant("N_un",250); // -N, the unscaled population size per population at the start of the simulation
+		defineConstant("N_dif_un",250); // -f, the unscaled population size per population, after any size changes.
 		
-		defineConstant("subpopCount",2); // -B
+		defineConstant("subpopCount",2); // -B, the number of subpopulations present.
 		
-		defineConstant("g_rate",1.00); // -g
-		defineConstant("growthGen_un",1000); // -G
+		defineConstant("g_rate",1.00); // -g, rate of population size change. 1.0 indicates no change, lower values are contractions, larger values are growth.
+		defineConstant("growthGen_un",1000); // -G, unscaled generation for growth to begin
 		
-		defineConstant("selStrength",0.0); // -w
-		defineConstant("sweepType","n"); // -h
-		defineConstant("sweepGen_un",1000); // -H
+		defineConstant("selStrength",0.0); // -w, strength of selection in a sweep. 
+		defineConstant("sweepType","n"); // -h, n/h/s, whether no, hard, or soft sweeps are implemented
+		defineConstant("sweepGen_un",1000); // -H, unscaled generation for a selective sweep to begin. 
 		
-		defineConstant("outSamp",20); // -s
-		defineConstant("tempName",'modelnuc.temp'); // from -o
-		defineConstant("textName",'modelnuc.txt'); // from -o
-		defineConstant("treeName",'modelnuc.trees'); // from -o 
-		defineConstant("locsName",'modelnuc.locs'); // from -o // NEW
-		defineConstant("outputGen_un",1000); // -O
+		defineConstant("outSamp",20); // -s, number of individuals to output
+		defineConstant("tempName",'modelnuc.temp'); // -o, name of temp/MS file
+		defineConstant("textName",'modelnuc.txt'); // -o, name of txt file
+		defineConstant("treeName",'modelnuc.trees'); // -o, name of trees file
+		defineConstant("locsName",'modelnuc.locs'); // -o, name of locations file
+		defineConstant("outputGen_un",1000); // -O, output generation
 		
-		defineConstant("spatial",1); // -l
-		defineConstant("ibd",1); // -i
-		defineConstant("nicheFile","vireotest_slim_TRANSITION_57x87_coarse.txt"); // -e, if this doesn't work try changing to linux not macos format
-		defineConstant("nicheX",57); // -x
-		defineConstant("nicheY",87); // -y
-		defineConstant("competition",1); // -c
+		defineConstant("spatial",1); // -l, 0/1, whether model is spatially explicit 
+		defineConstant("ibd",1); // -i, 0/1, whether isolation by distance (spatial mate choice) is implemented
+		defineConstant("nicheFile","vireotest_slim_TRANSITION_57x87_coarse.txt"); // -e, niche model filename, if this doesn't work try changing end-of-line character format
+		defineConstant("nicheX",57); // -x, x-axis size of niche model
+		defineConstant("nicheY",87); // -y, y-axis size of niche model 
+		defineConstant("competition",1); // -c, 0/1, whether competition is present/absent
 		
-		defineConstant("treeSeq",1); // -t 
+		defineConstant("treeSeq",1); // -t, 0/1, whether or not treesequence recording is used
 		
-		defineConstant("allPops",0); // -a currently not implemented for growth 
-		defineConstant("migRate",0); // -M must be 0 to <1, also might not work spatially neccesarily -- will need to check
-		defineConstant("secContact",1); // -v
-		defineConstant("secConGen_un_before",100); // -V
-		defineConstant("secConGen_un",outputGen_un-secConGen_un_before);
+		defineConstant("allPops",0); // -a, 0/1, whether or not sweep/growth changes impact all populations or just p1. currently not implemented 
+		defineConstant("migRate",0); // -M, migration rate. must be 0 to <1, performance drops at values greater than ~0.1
+		defineConstant("secContact",1); // -v, 0/1, whether or not secondary contact is present/absent. 
+		defineConstant("secConGen_un_before",100); // -V, unscaled number of generations of secondary contact
+		defineConstant("secConGen_un",outputGen_un-secConGen_un_before); // sets the number of generations of secondary contact to start at the end of the simulation
 		
 		
-		defineConstant("scaling",0.5); // from -X 
+		defineConstant("scaling",0.5); // -X, scaling factor used. 
 	}
 	
-	defineConstant("burnin",100); // use recap instead 
+	defineConstant("burnin",100); // the number of generations of burnin before the simulation starts. 
 	
 	// SET UP SCALING FACTORS
 	// scale NE -- multiply
@@ -59,7 +62,7 @@ initialize() {
 	// scale mutation -- divide
 	defineConstant("mu",mu_un / scaling);
 	
-	// scale recombination -- complex
+	// scale recombination -- complex function
 	defineConstant("recomb",0.5*(1-(1-2*recomb_un)^(1/scaling)));
 	
 	// scale generation times -- multiply
@@ -70,18 +73,19 @@ initialize() {
 	
 	if(spatial==1){
 		// this code only runs if you are implementing spatial simulations
+		// sets up the dimensionality of the simulation
 		if(nucleotide==0) {initializeSLiMOptions(dimensionality="xy");}
 		else {initializeSLiMOptions(dimensionality="xy",nucleotideBased=T);}
 	
 	
 	} else {
-		// this code only runs if you are not implementing spatial simulations
+		// this code only runs if you are not implementing spatial simulations. 
 		if(nucleotide==1) {initializeSLiMOptions(nucleotideBased=T);
 			cat("nucleotides on");}
 	}
 	
 	
-	// if you want to use nucleotides this code implements -- note, does not work with recapitation step downstream
+	// if you want to use nucleotides this code implements it. Note, this does not work with recapitation step downstream in pyslim.
 	if(nucleotide==1) {initializeAncestralNucleotides(randomNucleotides(chromLength));}
 	
 	if(treeSeq==1){
@@ -95,6 +99,7 @@ initialize() {
 		}
 	}
 	else {
+		// set up mutation rates or mutation hotspots
 		if(nucleotide==0)
 		{
 			initializeMutationRate(mu);
@@ -103,23 +108,27 @@ initialize() {
 		}
 	}
 	
+	// set up mutation types 
 	if(nucleotide==1) {
-		initializeMutationTypeNuc("m1", 0.5, "f", 0.0);
-		initializeMutationTypeNuc("m2", 1.0, "f", 0.0);
+		initializeMutationTypeNuc("m1", 0.5, "f", 0.0); // normal mutations
+		initializeMutationTypeNuc("m2", 1.0, "f", 0.0); // introduced mutation for sweeps, set to 0.0 here to be changed later 
 	} else {
-		initializeMutationType("m1", 0.5, "f", 0.0); // mutation for a hard sweep
+		initializeMutationType("m1", 0.5, "f", 0.0); // normal mutations
 		initializeMutationType("m2", 1.0, "f", 0.0); // introduced mutation, set to 0.0 here to be changed later 
 	}
 	if(nucleotide==0){
 		initializeGenomicElementType("g1", m1, 1.0);
 	} else {
-		initializeGenomicElementType("g1", m1, 1.0, mmJukesCantor(1e-7)); // might need to change to mu
+		// set up JukesCantor model for nucleotide evolution
+		initializeGenomicElementType("g1", m1, 1.0, mmJukesCantor(1e-7)); 
 	}
 	
+	// set chromosome length
 	initializeGenomicElement(g1, 0, chromLength-1);
 	
 	initializeRecombinationRate(recomb);
 	
+	// NOTE: changing the interactions to sigma_C etc makes it 10x faster, but this functionality was not tested
 	if (spatial==1) {
 		if(competition==1) {
 			// spatial competition interactions, optional
@@ -132,7 +141,7 @@ initialize() {
 			initializeInteractionType(2, "xy", reciprocal=T, maxDistance=0.3);
 		}
 	}
-	
+	// set up colors for visualization 
 	defineConstant("spatialcolors",c("black","blue","cyan"));
 	
 	
@@ -144,9 +153,8 @@ function (void)restartSimulation(void)
 {
 	// this block restarts the simulation 
 	// there are a few cases in which the simulation requires restarting
-	// primarily when hard or soft sweeps are in effect 
-	
-	// CODE TO DO THE RESET
+	// primarily when hard or soft sweeps are in effect
+	// this will reset the simulation as seed n+1 
 	
 	cat("\n"+simID + ": LOST BEFORE ESTABLISHMENT - RESTARTING\n");
 	// go back to generation that was checkpointed 
@@ -157,12 +165,8 @@ function (void)restartSimulation(void)
 	else {
 		sim.readFromPopulationFile("/tmp/slim_" + simID + ".trees");
 	}
-	// when this is called it wipes a LOT of stuff -- you'll have to set it up again 
-	// "All Eidos variables that are of type object and have
-	// element type Subpopulation, Genome, Mutation, Individual, or Substitution will be removed
-	// as a side effect of this method, since all such variables would refer to objects that no longer exist in
-	// the SLiM simulation; if you want to preserve any of that state, you should output it or save it to a file
-	// prior to this call."
+	
+	// when this is called it erases many variables from memory which must be reset
 	if(spatial==1){
 		if(competition==1){
 			i1.evaluate();
@@ -183,13 +187,7 @@ function (void)restartSimulation(void)
 	setSeed(getSeed() + 1);
 	print("\n"+getSeed());
 	
-	//sim.registerLateEvent(s1,start=1000);
-	//if(getSeed() - simID >= 25){
-	//print("ERROR: RESTARTED TOO MANY TIMES");
-	//stop();
-	//}
 	// re-introduce the sweep mutation
-	
 	if (allPops == 0) {
 		target = sample(p1.genomes, 1);
 		target.addNewDrawnMutation(m2, 10000);
@@ -224,6 +222,7 @@ function (void)restartSimulation(void)
 }
 
 fitness(NULL) {
+	// fitness callback to evaluate competition 
 	if(spatial==1){
 		if(competition==1){
 			if (relFitness == 0){
@@ -240,6 +239,7 @@ fitness(NULL) {
 }
 
 fitness(NULL) {
+	// fitness callback to evaluate fitness on the niche model
 	if(spatial==1){
 		//print("evaluate fitness 2");
 		// reward based on the cell you're in 
@@ -259,15 +259,12 @@ fitness(NULL) {
 }
 
 modifyChild() {
+	// generating offspring 
 	i = which(sim.subpopulations== subpop)+1;
 	if (spatial==1){
 		//print("modify child spatial");
 		// draw a child position near the first parent, within bounds
-		// could do more efficiently in one swoop, with claimping?
-		// Reprising boundary conditions
-		// ideal: draw a child near the first parent within bounds
-		// prevent from occupying in cells with value of -1 
-		// probability of breeding has to do with where the cell the parent is in 
+		// Note: probability of breeding has to do with ENM values for the cell the parent is in 
 		do pos = parent1.spatialPosition + rnorm(2, 0, 0.02);
 		while (!sim.subpopulations[i-1].pointInBounds(pos)); {
 			// prevent dispersal into water
@@ -275,7 +272,6 @@ modifyChild() {
 				return F;
 			}
 			// if not within the population subboundary do not accept
-			
 			if (sim.generation > (burnin-1)) {
 				
 				lower=((i-1)/subpopCount);
@@ -292,6 +288,7 @@ modifyChild() {
 }
 
 1 early(){
+	// reschedule the blocks according to the parameters specified 
 	cat("reschedule script blocks\n");
 	
 	sim.rescheduleScriptBlock(s1, start=growthGen); // forever, no end specified
@@ -304,7 +301,7 @@ modifyChild() {
 }
 
 1 late() {
-	
+	// set up the populations 
 	sim.addSubpop(1,N*subpopCount);
 	
 	if (spatial==1) {
@@ -323,28 +320,23 @@ modifyChild() {
 
 }
 
-// NOTE: changing the interactions to sigma_C etc makes it 10x faster, but this functionality was not tested
 s6 1 late() {
 	
-	// deregister the s1 script block so it doesn't execute unless called 
-	//sim.deregisterScriptBlock(s1);
-	
-	//may need to change to 1 late()
 	// save this run's identifier, used to save and restore
 	defineConstant("simID", getSeed());
+	
+	// add the subpopulations
 	cat("\nAdd subpops\n");
-	
-	
 	if (subpopCount > 1) {
 		for (i in 2:subpopCount) {
 			if (i == 1) { sim.addSubpop(i, N); } else { sim.addSubpopSplit(i, N, 1); }
 			if (spatial==1) {
+				// subdivide the map based on the number of populations and then set up spatial
 				lower=((i-1)/subpopCount);
 				upper=((i)/subpopCount);
 				cat("\nset spatial\n");
 				
-				// below change back
-				sim.subpopulations[i-1].setSpatialBounds(c(0.0, 0.0, 1.0, 1.0)); // can set to nicheY and nicheX but then need to modify makeChild
+				sim.subpopulations[i-1].setSpatialBounds(c(0.0, 0.0, 1.0, 1.0)); 
 				mapLines = rev(readFile(nicheFile));
 				mapLines = sapply(mapLines, "strsplit(applyValue, ' ');");
 				mapValues = asFloat(mapLines);
@@ -358,7 +350,6 @@ s6 1 late() {
 				// Initial positions are random within spatialBounds
 				for (ind in sim.subpopulations[i-1].individuals) {
 					ind.setSpatialPosition(p1.pointUniform());
-					// ideally want to initialize with weight according to layer beneath 
 				}
 			}
 		}
@@ -366,10 +357,10 @@ s6 1 late() {
 	//cat(sim.subpopulations);
 	//cat("\n");
 	if (migRate > 0) {
-		// set migration rates between -- all symmetrical all the time 
+		// set migration rates between -- currently, all symmetrical all the time 
 		if (secContact == 0) {
 			cat("\nBegin migration\n");
-			// only set migration rates here if there isn't secondary contact
+
 			for (i in 1:subpopCount) {
 				for (j in 1:subpopCount) {
 					if (i != j) {
@@ -381,8 +372,10 @@ s6 1 late() {
 	}
 }
 
-// optional blocks of code for competition and mate choice
 1: late() {
+
+	// evaluate competition and mate choice if present
+
 	// print the generation 
 	if((sim.generation % 100) == 0) { cat(sim.generation+" "); }
 	if((sim.generation % 500) == 0) { cat("\n"); }
@@ -401,9 +394,8 @@ s6 1 late() {
 }
 
 1: mateChoice() {
-	//for (i in 1:subpopCount) {
-	//print(i);
-	//print(sim.subpopulations[i-1]);
+	// evaluate mate choice with or without IBD
+
 	if(spatial==1){
 		if(ibd==1){
 			//print("mate choice 1");
@@ -426,17 +418,17 @@ s6 1 late() {
 		mates = rep(1.0, sourceSubpop.individualCount);
 	}
 	return mates;
-	//}
-	//return mates;
+
 }
 
 s1 1000: early() { 
+	// implement growth or contraction, which will only work if g_rate is not 1 
 	// note: this only is set up to work on P1 for now 
+	
 	//print("Evaluate size change");
-	// calculate the number of generations it will take to reach N_dif
+	// calculate the number of generations it will take to reach N_dif, the new population size
 	if ( (log(N_dif/N) / log(g_rate) + (growthGen-1)  ) > sim.generation) {
 		//print("size");
-		// this below causes problems with float point errors 
 		newSize = asInteger(round(g_rate^(sim.generation - (growthGen-1) ) * N));
 		//print(newSize);
 		if (N > N_dif)
@@ -473,7 +465,9 @@ s1 1000: early() {
 s2 1000 late() { 
 	
 	// save the state of the simulation
-	cat("\n"+"save sim\n"); // does this correctly 
+	cat("\n"+"save sim\n"); 
+	
+	// output everything temporarily
 	if(treeSeq==0){
 		sim.outputFull("/tmp/slim_" + simID + ".txt");
 	}
@@ -482,7 +476,10 @@ s2 1000 late() {
 	}
 	cat("\n"+"add mutation\n");
 	
-	// first if the sweep type is h (hard) add one per population
+	// set up sweeps if needed
+	// note: this currently is only done for pop1
+	
+	// h (hard sweeps)
 	if (sweepType == "h") {
 		
 		if (allPops == 0) {
@@ -510,6 +507,7 @@ s2 1000 late() {
 		mut = sim.mutationsOfType(m2);
 		mut.setSelectionCoeff(selStrength);
 	}
+	
 	// if the sweep type is "s" (soft) add to 5% of individuals, rounded
 	if (sweepType=="s") {
 		numberToAdd= asInteger(round(N*0.09));
@@ -536,17 +534,19 @@ s2 1000 late() {
 			}
 		}
 	}
-	// introduce the sweep mutation
-	// note: this currently is only done for pop1
+	
+	
 }
 
 s3 1000 late() {
 	// set up secondary contact 
+	
 	if (secContact == 1) {
 		if (migRate > 0) {
 			cat("secondary contact\n");
-			// set migration rates between -- all symmetrical all the time 
-			// only set migration rates here if there isn't secondary contact
+			
+			// set migration rates between populations. all symmetrical all the time 
+			
 			for (i in 1:subpopCount) {
 				for (j in 1:subpopCount) {
 					//cat(i+" "+j+"\n");
@@ -560,10 +560,9 @@ s3 1000 late() {
 }
 
 s4 1000: late() {
-	//print("start sweeps");
-	// NOTE: this does not currently check if its fixed within a population 
-	// or missing within a population 
-	// ALSO: not implemented properly if one population keeps and one loses a sweep mutation
+
+	// check status of selective sweeps to see if simulation needs to reset
+	// NOTE: this does not currently check if its fixed within a population, missing within a population, or if one population keeps and one loses a sweep mutation
 	
 	if (sweepType == "s")
 	{
@@ -747,6 +746,9 @@ s4 1000: late() {
 }
 
 s5 2000 late() {
+
+	// output results of simulation 
+
 	cat("\nOutput\n\n###########################\n\n");
 	
 	if (spatial==1) {
