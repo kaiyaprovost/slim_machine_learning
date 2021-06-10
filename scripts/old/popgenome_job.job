@@ -7,29 +7,21 @@
 #PBS -M kprovost@amnh.org
 #PBS -k oe
 
-# change to the working directory
-#cd $PBS_O_WORKDIR
-#echo "pbsworkdir"
-#echo $PBS_O_WORKDIR
-#EXECDIR=`pwd`
-#export PATH=./:$PATH
-#echo $PATH
-
 date
 time
 
-cd /home/kprovost/nas2/Analysis_SLiM/finished
+cd /home/kprovost/nas3/
 
-# for i in slim-*/*txt; 
+# for i in /vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MSFILES/*/*/; 
 # do echo $i; 
-# qsub -v filename=$i /home/kprovost/nas2/Analysis_SLiM/popgenome_job.job; 
+# qsub -v path=$i /home/kprovost/nas3/popgenome_job.job; 
 # done;
 
-## requires argument rpath
+module load R-3.4.1
 
-echo $filename
+echo $path
 
-Rscript /home/kprovost/nas2/Analysis_SLiM/testingPopgenome_huxley.R $filename
+Rscript /home/kprovost/nas3/testingPopgenome_ms.R $path
 
 date
 time

@@ -1,0 +1,19 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=1
+#PBS -l walltime=99999:00:00
+#PBS -N combine_stats
+#PBS -j oe
+#PBS -m ae
+#PBS -M kprovost@amnh.org
+#PBS -k oe
+
+module load R-3.4.1
+
+cd "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MLSTATS/"
+
+echo "R_LIBS_USER=$PWD/localR/" > .Renviron
+
+## for i in /vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MLSTATS/*/*/; do echo $i; qsub -v path=$i /home/kprovost/nas3/combine_stats.job;  done;
+
+## arguments needed: path
+Rscript --no-save /home/kprovost/nas3/6.combine_columns_of_popgenome.R $path

@@ -2199,20 +2199,17 @@ for (p in packages) {
   
 }
 
+args = commandArgs(trailingOnly=TRUE)
+
+if (length(args)==0) {
+  path="/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MSFILES/" ## 2957
+} else {
+  path = args[1]
+}
 
 files=c()
-path="/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/CFB_review_J_Biogeo/cardinalis vcf/" ## 2957
 setwd(path)
-files = c(files,list.files(path = path,pattern = "*ms$",recursive = F,full.names = T))
-#files = c(files,list.files(path = path,pattern = "*fulltemp$",recursive = TRUE,full.names = T))
-#files = c(files,list.files(path = path,pattern = "*subsettemp$",recursive = TRUE,full.names = T))
-#files = c(files,list.files(path = path,pattern = "*window.temp$",recursive = TRUE,full.names = T))
-#files = c(files,list.files(path = path,pattern = "*vcf.temp$",recursive = TRUE,full.names = T))
-#files = c(files,list.files(path = path,pattern = "*converted.temp$",recursive = TRUE,full.names = T))
-#path="/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/fulltemps/"
-#setwd(path)
-#files = c(files,list.files(path = path,pattern = "*fulltemp$",recursive = TRUE,full.names = T))
-#files = c(files,list.files(path = path,pattern = "*subsettemp$",recursive = TRUE,full.names = T))
+files = c(files,list.files(path = path,pattern = "*ms$",recursive = T,full.names = T))
 files=unique(files)
 files = files[!grepl("finished", files)]
 files = files[!grepl("DONE", files)]
