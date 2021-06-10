@@ -1,5 +1,10 @@
+## set flags
+overwrite = F ## whether to re-calculate stats if already exist
+doWindow = T ## whether or not to do windowed calculations
+verbose = T ## whether or not to have debugging print statements
+j=1 ## which index to start from, for debugging
 
-
+## import packages
 dynamic_require <- function(package) {
   if (eval(parse(text = paste("require(", package, ")"))))
     return(TRUE)
@@ -12,35 +17,30 @@ for (p in packages) {
   dynamic_require(p)
 }
 
+## load simulated files
 files=c()
-path="/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/cardinalis vcf" ## 2957
+path="~/simulated_statistics/"
 setwd(path)
-files = c(files,list.files(path = path,pattern = ".*split.*ms$",recursive = F,full.names = T))
-#files = c(files,list.files(path = path,pattern = "*fulltemp$",recursive = TRUE,full.names = T))
-#files = c(files,list.files(path = path,pattern = "*subsettemp$",recursive = TRUE,full.names = T))
-#files = c(files,list.files(path = path,pattern = "*window.temp$",recursive = TRUE,full.names = T))
-#files = c(files,list.files(path = path,pattern = "*vcf.temp$",recursive = TRUE,full.names = T))
-#files = c(files,list.files(path = path,pattern = "*converted.temp$",recursive = TRUE,full.names = T))
-#path="/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/fulltemps/"
-#setwd(path)
-#files = c(files,list.files(path = path,pattern = "*fulltemp$",recursive = TRUE,full.names = T))
-#files = c(files,list.files(path = path,pattern = "*subsettemp$",recursive = TRUE,full.names = T))
+files = c(files,list.files(path = path,pattern = "ms$",recursive = F,full.names = T))
+files = c(files,list.files(path = path,pattern = "temp$",recursive = TRUE,full.names = T))
+
+## load empirical files, if you have them 
+# path="~/empirical_statistics/"
+# setwd(path)
+# files = c(files,list.files(path = path,pattern = "ms$",recursive = TRUE,full.names = T))
+# files = c(files,list.files(path = path,pattern = "temp$",recursive = TRUE,full.names = T))
+
+## sort files
 files=unique(files)
 files = files[!grepl("finished", files)]
 files = files[!grepl("DONE", files)]
-
-
 x <- file.info(files)
 x <- x[order(x$size), ]
 files = rownames(x)
-## linkage works with missingtrue monoeither but not missingfalse monoeither?
-#myfiles = sample(files)
 myfiles=files
 length(myfiles)
-do_vcf = F
-overwrite = F
-doWindow = T
-verbose = T
+
+## my custom functions to run files
 fixHeaderMS = function(msfile) {
   lines = readLines(msfile)
   numlines = sum(lines == "//")
@@ -341,7 +341,7 @@ momentsWindowStatsMS = function(MS.class_outtable_window) {
   return(moments_df)
 }
 
-## from popgenome package trying to play nice
+## functions copied from popgenome package to modify functionality slightly 
 readMS.custom = function (file, big.data = FALSE,verbose=FALSE) {
   if (!big.data) {
     out <- read.ms.output.custom(file.ms.output = file)
@@ -2186,55 +2186,56 @@ get_data <- function(matr,include.unknown=FALSE,gff=FALSE,FAST,SNP.DATA){
   
 }
 
-j=1
-if (do_vcf == F) {
-  for (i in (j:length(myfiles))) {
-    msfile = myfiles[i]
+## iterate over files
+for (i in (j:length(myfiles))) {
+  msfile = myfiles[i]
+  
+  if(file.exists(msfile)) {
     
-    if(file.exists(msfile)) {
-      
-      if(verbose==T){print(paste("Starting ", i, " of ", length(myfiles), sep = ""))}
-      can_run_lines = fixHeaderMS(msfile)
-      can_run = can_run_lines[[1]]
-      lines = can_run_lines[[2]]
-      if (can_run == TRUE) {
-        if(verbose==T){print("passes can run check")}
-        folder = dirname(msfile)
-        file = basename(msfile)
-        prefix = basename(msfile)
-        outfile_text = paste(folder, "/", prefix, ".popgenome.stats", sep = "")
-        setwd(folder)
-        if (overwrite != T && file.exists(outfile_text)) {
-          if(verbose==T){print("DO NOT RUN, ALREADY DONE")}
-          #gzip(msfile, overwrite = T)
-        } else {
-          #MS.class = readMS.custom(file)
-          if(verbose==T){print("passes overwrite check")}
-          MS.class = try(readMS.custom(file),TRUE)
+    if(verbose==T){print(paste("Starting ", i, " of ", length(myfiles), sep = ""))}
+    
+    ## change headers in case of corruption
+    can_run_lines = fixHeaderMS(msfile)
+    can_run = can_run_lines[[1]]
+    lines = can_run_lines[[2]]
+    if (can_run == TRUE) {
+      if(verbose==T){print("passes can run check")}
+      folder = dirname(msfile)
+      file = basename(msfile)
+      prefix = basename(msfile)
+      outfile_text = paste(folder, "/", prefix, ".popgenome.stats", sep = "")
+      setwd(folder)
+      if (overwrite != T && file.exists(outfile_text)) {
+        if(verbose==T){print("DO NOT RUN, ALREADY DONE")}
+        #gzip(msfile, overwrite = T)
+      } else {
+        #MS.class = readMS.custom(file)
+        if(verbose==T){print("passes overwrite check")}
+        MS.class = try(readMS.custom(file),TRUE)
+        
+        if(isTRUE(class(MS.class)=="try-error")) { 
+          if(verbose==T){print("error reading file")}
+          next
+        } else { 
           
-          if(isTRUE(class(MS.class)=="try-error")) { 
-            if(verbose==T){print("error reading file")}
-            next
-            } else { 
+          #try(readMS(file),silent=F)
+          if (length(get.individuals(MS.class)) != 0) {
+            if(verbose==T){print("file not empty")}
+            numinds = length(get.individuals(MS.class)[[1]])
+            numpopstodo = 2
+            perpop = numinds / numpopstodo
+            pop1 = (1:((numinds) / 2))
+            pop2 = (max(pop1) + 1):numinds
+            MS.class <- set.populations(MS.class, list(pop1, pop2))
             
-            #try(readMS(file),silent=F)
-            if (length(get.individuals(MS.class)) != 0) {
-              if(verbose==T){print("file not empty")}
-              numinds = length(get.individuals(MS.class)[[1]])
-              numpopstodo = 2
-              perpop = numinds / numpopstodo
-              pop1 = (1:((numinds) / 2))
-              pop2 = (max(pop1) + 1):numinds
-              MS.class <- set.populations(MS.class, list(pop1, pop2))
-              
-              ## don't do diversity if less than 4 inds
-              if(numinds>=4){do_div = T} else {do_div = F}
-              
-              #MS.class_outtable = runStatsMS(MS.class,div=do_div)
-              MS.class_outtable = try(runStatsMS(MS.class,div=do_div),TRUE)
-              if(isTRUE(class(MS.class_outtable)=="try-error")) { 
-                if(verbose==T){print("error on stats")}
-                next } else { 
+            ## don't do diversity if less than 4 inds
+            if(numinds>=4){do_div = T} else {do_div = F}
+            
+            #MS.class_outtable = runStatsMS(MS.class,div=do_div)
+            MS.class_outtable = try(runStatsMS(MS.class,div=do_div),TRUE)
+            if(isTRUE(class(MS.class_outtable)=="try-error")) { 
+              if(verbose==T){print("error on stats")}
+              next } else { 
                 
                 if(verbose==T){print("outputting 1")}
                 MS.class_outtable= MS.class_outtable[ , order(colnames(MS.class_outtable))]
@@ -2243,7 +2244,7 @@ if (do_vcf == F) {
                   as.matrix(MS.class_outtable), file = outfile_text, quote = F, row.names = F, sep = "\t")
                 
                 if (doWindow == T) {
-                  ## automatically calclulate the windows by dividing by 10
+                  ## automatically calculate the windows by dividing by 10
                   n.sites = get.sum.data(MS.class)[1]
                   if (n.sites > 100000) {
                     width = 100000
@@ -2271,7 +2272,7 @@ if (do_vcf == F) {
                     if(isTRUE(class(MS.class.win)=="try-error")) { 
                       if(verbose==T){print("sliding window conversion error")}
                       next
-                      } else { 
+                    } else { 
                       
                       #MS.class.win <- sliding.window.transform(MS.class, width = width, jump = jump, type = 2, whole.data = FALSE)
                       MS.class.win = set.populations(MS.class.win, list(pop1, pop2))
@@ -2280,17 +2281,17 @@ if (do_vcf == F) {
                       if(isTRUE(class(MS.class_outtable_window)=="try-error")) { 
                         if(verbose==T){print("sliding window stats error")}
                         next } else { 
-                        
-                        #MS.class_outtable_window = runStatsMS(MS.class.win, sum = F, window = T,div=F)
-                        
-                        window_moments = try(momentsWindowStatsMS(MS.class_outtable_window),TRUE)
-                        
-                        if(isTRUE(class(window_moments)=="try-error")) { next } else { 
                           
-                          #window_moments = momentsWindowStatsMS(MS.class_outtable_window)
-                          MS.class_outtable = cbind(MS.class_outtable, window_moments)
+                          #MS.class_outtable_window = runStatsMS(MS.class.win, sum = F, window = T,div=F)
+                          
+                          window_moments = try(momentsWindowStatsMS(MS.class_outtable_window),TRUE)
+                          
+                          if(isTRUE(class(window_moments)=="try-error")) { next } else { 
+                            
+                            #window_moments = momentsWindowStatsMS(MS.class_outtable_window)
+                            MS.class_outtable = cbind(MS.class_outtable, window_moments)
+                          }
                         }
-                      }
                     }
                   }
                 }
@@ -2300,16 +2301,17 @@ if (do_vcf == F) {
                   as.matrix(MS.class_outtable), file = outfile_text, quote = F, row.names = F, sep = "\t")
                 rm(MS.class_outtable)
               }
-            }
-            rm(MS.class)
           }
+          rm(MS.class)
         }
-        gzip(msfile, overwrite = T)
-      } else {  gzip(msfile,overwrite=T)  }
-      
-    }
+      }
+      gzip(msfile, overwrite = T)
+    } else {  gzip(msfile,overwrite=T)  }
+    
   }
 }
+
+## for debugging only 
 # for(i in 1:max(j,i)){
 #   if(file.exists(myfiles[i])){
 #     gzip(myfiles[i],overwrite=T)

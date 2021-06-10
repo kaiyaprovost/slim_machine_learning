@@ -1,5 +1,7 @@
 #!/bin/bash
 
+## ONE OF THESE FOR EACH SIMULATION TYPE 
+
 ## example run -- this example will run for 6000 generations with panmixia and no ibd
 # bash 1.run_slim_simulations.sh \
 # -a 0 \
@@ -29,6 +31,7 @@
 # -V 5000 \
 # -w "0.0" \
 # -x 57 \
+# -X 0.02 \
 # -y 87 
 ## this example file will produce files with filename resembling panmixia_noibd_6000-TIMESTAMP-i.trees
 ## where TIMESTAMP is the system time in seconds that the run is initialized 
