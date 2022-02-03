@@ -560,10 +560,10 @@ dev.off()
     par(mar=c(0,2.5,1.5,2.5),bg=NA)
     
     net=igraph::graph.adjacency(mat_6k,mode="directed",weighted=TRUE,diag=TRUE) 
-    igraph::plot.igraph(net,vertex.label=V(net)$name,main=suffix,
+    igraph::plot.igraph(net,vertex.label=igraph::V(net)$name,main=suffix,
                 #layout=layout_on_grid,
                 #layout=x,
-                layout=layout_in_circle,
+                layout=igraph::layout_in_circle,
                 vertex.shape="circle",
                 vertex.size=35,
                 #vertex.size=5,
@@ -573,7 +573,7 @@ dev.off()
                 #vertex.color=c("grey","red","goldenrod","cornflowerblue"),
                 #vertex.label.color="black",
                 edge.color="black",
-                edge.width=E(net)$weight*2, 
+                edge.width=igraph::E(net)$weight*2, 
                 #edge.with=1,
                 #edge.lty=2,
                 edge.arrow.size=0.5,edge.curved=0.2)
