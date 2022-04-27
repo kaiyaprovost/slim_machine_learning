@@ -11,9 +11,14 @@ mkdir stats
 mkdir localR
 
 #module load r/3.5.1-py2.7
-module load R-3.4.1
+#module load R-3.4.1
+module load R-3.6.3
 
 cd "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/"
+
+mkdir stats
+mkdir localR
+
 
 #fgz1=$1
 #fgz=`basename $fgz1`
@@ -25,7 +30,27 @@ cd "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/"
 
 echo "R_LIBS_USER=$PWD/localR/" > .Renviron
 
-Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/BELLII/WINDOWS/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/BILINEATA/WINDOWS/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/BRUNNEICAPILLUS/WINDOWS/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/CRISSALE/WINDOWS/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/CURVIROSTRE/WINDOWS/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/FLAVICEPS/WINDOWS/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/FUSCA/WINDOWS/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/MELANURA/WINDOWS/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/NITENS/WINDOWS/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/SINUATUS/WINDOWS/"
+ 
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MSFILES/BELLII/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MSFILES/BILINEATA/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MSFILES/BRUNNEICAPILLUS/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MSFILES/CRISSALE/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MSFILES/CURVIROSTRE/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MSFILES/FLAVICEPS/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MSFILES/FUSCA/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MSFILES/MELANURA/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MSFILES/NITENS/"
+Rscript --no-save /home/kprovost/nas3/5.testingPopgenome_emperical.R "/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/MSFILES/SINUATUS/"
 
 
 

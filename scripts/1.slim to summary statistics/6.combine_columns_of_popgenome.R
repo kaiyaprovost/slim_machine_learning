@@ -2,21 +2,86 @@ library(gtools)
 library(R.utils)
 library(dplyr)
 
+#for path in /vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/*/WINDOWS/???????*/; do echo $path; Rscript --no-save /home/kprovost/nas3/6.combine_columns_of_popgenome.R $path; done
+
 args = commandArgs(trailingOnly=TRUE)
 
 if (length(args)==0) {
-  pathlist="/Users/kprovost/Dropbox (AMNH)/" 
+  pathlist=list.dirs("/vz-nas1-active/ProcessedGenomicReads/EVERY_PLATE/ANGSD/VCFS/MELANURA/WINDOWS",recursive=F,full.names = T)
+  #pathlist="/Users/kprovost/Dropbox (AMNH)/" 
   #pathlist = c("/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/CFB_review_J_Biogeo/cardinalis vcf/DONE/")
 } else {
   pathlist = args[1]
 }
 
+doPopMSMerge = TRUE
+doHuxleyMerge = TRUE
 doPopgenome = FALSE
 doSumstat = FALSE
-doSmallMerge = TRUE 
+doSmallMerge = FALSE 
 doMerges = FALSE
 doTrimmed = FALSE
 
+## merge individual pop and ms files
+if (doPopMSMerge==TRUE) {
+  for(path in pathlist){
+    all_files = c(list.files(path=path,pattern = "stats$", recursive = F,full.names = T))
+    stats_files = all_files[grepl("sumstats",all_files)]
+    pop_files = all_files[grepl("popgenome",all_files)]
+    stats_base  = sub(".sumstats.stats","",basename(stats_files))
+    pop_base = sub(".popgenome.stats","",basename(pop_files))
+    stats_base  = sub(".gz","",stats_base)
+    pop_base = sub(".gz","",pop_base)
+    stats_base  = gsub(".ms$","",stats_base)
+    pop_base = gsub(".ms$","",pop_base)
+    shared = intersect(stats_base,pop_base)
+    
+    for(sharefile in rev(shared)) {
+      print(sharefile)
+      this_stats = stats_files[grepl(sharefile,stats_files)]
+      this_pop = pop_files[grepl(sharefile,pop_files)]
+      if(length(this_stats)>1 | length(this_pop)>1 ){
+        
+        this_stats = paste(path,"/",sharefile,".ms.sumstats.stats",sep="")
+        this_pop = paste(path,"/",sharefile,".ms.popgenome.stats",sep="")
+        
+      } else {
+        
+        stats_df = read.table(this_stats,sep="\t",header=F,na.strings = c("NA","NaN","NAN","-100","NULL"),fill=T)
+        if(ncol(stats_df)!=10){
+          print("File is blank; delete")
+          file.remove(this_stats)
+        } else {
+          colnames(stats_df) = c("X","pi","X","ss","X","D","X","thetaH","X","H")
+          stats_df = stats_df[,c(2,4,6,8,10)]
+          pop_df = read.table(this_pop,sep="\t",header=T,na.strings = c("NA","NaN","NAN","-100","NULL"),fill=T)
+          combo_df = cbind(stats_df,pop_df)
+          combo_df$file = sharefile
+          write.table(combo_df,sub("sumstats","mergestats",this_stats),sep="\t",row.names = F)
+          gzip(this_stats)
+          gzip(this_pop)
+        }
+      }
+    }
+  }
+}
+
+if(doHuxleyMerge==TRUE){
+  for(path in pathlist){
+    print(path)
+    mergefiles = c(list.files(path=path,pattern = "mergestats.stats$", recursive = F,full.names = T))
+    if(length(mergefiles)>0){
+      mergelist = lapply(mergefiles,FUN=function(x){read.table(x,header=T,sep="\t")})
+      merged=do.call(gtools::smartbind, mergelist)
+      if(file.exists(paste(path,"/MERGEDSTATS.txt",sep=""))){
+        df = read.table(paste(path,"/MERGEDSTATS.txt",sep=""),header=T,sep="\t")
+        merged = gtools::smartbind(merged,df)
+      }
+      write.table(merged,paste(path,"/MERGEDSTATS.txt",sep=""),sep="\t",row.names = F)
+      lapply(mergefiles,FUN=function(x){gzip(x)})
+    }
+  }
+}
 ## import popgenome
 if (doPopgenome==TRUE) {
   
@@ -137,9 +202,9 @@ if (doSumstat == TRUE) {
 if (doSmallMerge == TRUE) {
   
   specieslist = c(#"BELLII","BILINEATA","BRUNNEICAPILLUS","CRISSALE","CURVIROSTRE",
-                  #"FLAVICEPS",
+    #"FLAVICEPS",
     "FUSCA"#,"MELANURA","NITENS","SINUATUS"
-    )
+  )
   #pathlist = c("/Users/kprovost/Dropbox (AMNH)/Dissertation/CHAPTER1_REVIEW/SLIM/runs/STATS_testing/TESTING/")
   
   mergeacross = FALSE
@@ -150,7 +215,7 @@ if (doSmallMerge == TRUE) {
     
     setwd(path)
     allfiles = list.files(pattern = "MERGED_empirical_", recursive = FALSE)
-  
+    
     
     for(species in specieslist) {
       

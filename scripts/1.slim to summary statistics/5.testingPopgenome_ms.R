@@ -1,16 +1,31 @@
-dynamic_require <- function(package) {
-  if (eval(parse(text = paste("require(", package, ")"))))
-    return(TRUE)
-  install.packages(package)
-  return(eval(parse(text = paste(
-    "require(", package, ")"))))
-}
-packages = c("PopGenome", "moments", "R.utils", "gtools")
-for (p in packages) {
-  dynamic_require(p)
-}
+## Updated: 6 Apr 2022
+
+# print("setup r libs user")
+# dir.create(Sys.getenv("R_LIBS_USER"), recursive = F)  # create personal library
+# .libPaths(Sys.getenv("R_LIBS_USER"))
+
+print("load packages")
+# dynamic_require <- function(package) {
+#   if (eval(parse(text = paste("require(", package, ")"))))
+#     return(TRUE)
+#   install.packages(package,repos = "http://cran.us.r-project.org")
+#   return(eval(parse(text = paste(
+#     "require(", package, ")"))))
+# }
+# packages = c("PopGenome", "R.utils", "gtools")
+# for (p in packages) {
+#   dynamic_require(p)
+# }
+
+## install moments from source on huxley
+install.packages("/home/kprovost/nas3/moments_0.14.tar.gz",repos=NULL,type="source")
+library(moments)
+library(PopGenome)
+library(R.utils)
+library(gtools)
 
 ## set up functions
+print("load functions")
 {
   fixHeaderMS = function(msfile) {
     lines = readLines(msfile)
@@ -18,7 +33,7 @@ for (p in packages) {
     segsites = as.numeric(strsplit(lines[2], ":")[[1]][2])
     
     if(is.na(segsites)){
-      if(substr(lines[2],1,4)=="slim"){
+      if(substr(lines[2],1,4)=="slim"){ ## erroring out here
         lines=lines[c(1,3:length(lines))]
         writeLines(lines, msfile)
         lines = readLines(msfile)
@@ -101,7 +116,7 @@ for (p in packages) {
     return(list(can_run = can_run, lines = lines))
   }
   runStatsMS = function(MS.class_temp=MS.class, window = F, sum = T, neut = T, link = T, recom = T, fst = T, div = T, mkt = T,
-                        sweep = T, r2 = T, hap = T, min = T, nuc = div, detail = T,verbose=F) {
+                        sweep = T, r2 = T, hap = T, min = T, nuc = div, detail = T,verbose=T) {
     skip = F
     if (sum == T) {
       MS.class_temp_outtable = get.sum.data(MS.class_temp) ## 1 row
@@ -313,6 +328,7 @@ for (p in packages) {
   }
   
   ## from popgenome package trying to play nice
+  {
   readMS.custom = function (file, big.data = FALSE,verbose=FALSE,include.unknown=TRUE) {
     if (!big.data) {
       out <- read.ms.output.custom(file.ms.output = file)
@@ -2195,6 +2211,7 @@ for (p in packages) {
     return(list(gametes=listofMatrices,segsites=segsites,positions=positions))
   }
   # End of function
+  }
   
   
 }
@@ -2207,17 +2224,19 @@ if (length(args)==0) {
   path = args[1]
 }
 
+print("load files")
 files=c()
 setwd(path)
 files = c(files,list.files(path = path,pattern = "*ms$",recursive = T,full.names = T))
+files = c(files,list.files(path = path,pattern = "*ms.gz$",recursive = T,full.names = T))
+# files = c("/Users/kprovost/Documents/vcf_to_convert_10snps.ms")
 files=unique(files)
 files = files[!grepl("finished", files)]
 files = files[!grepl("DONE", files)]
 
-
-x <- file.info(files)
-x <- x[order(x$size), ]
-files = rownames(x)
+#x <- file.info(files)
+#x <- x[order(x$size), ]
+#files = rownames(x)
 ## linkage works with missingtrue monoeither but not missingfalse monoeither?
 #myfiles = sample(files)
 myfiles=files
@@ -2236,6 +2255,7 @@ if (do_vcf == F) {
     if(file.exists(msfile)) {
       
       if(verbose==T){print(paste("Starting ", i, " of ", length(myfiles), sep = ""))}
+      if(verbose==T){print(basename(msfile))}
       can_run_lines = fixHeaderMS(msfile)
       can_run = can_run_lines[[1]]
       lines = can_run_lines[[2]]
@@ -2244,6 +2264,11 @@ if (do_vcf == F) {
         folder = dirname(msfile)
         file = basename(msfile)
         prefix = basename(msfile)
+        if(tools::file_ext(file)==".gz") {
+          gunzip(file, remove=TRUE)
+          file=sub(".gz","",file)
+          prefix=sub(".gz","",prefix)
+        }
         outfile_text = paste(folder, "/", prefix, ".popgenome.stats", sep = "")
         setwd(folder)
         if (overwrite != T && file.exists(outfile_text)) {
